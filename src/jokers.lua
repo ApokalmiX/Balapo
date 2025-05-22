@@ -624,7 +624,8 @@ SMODS.Joker {
 	loc_txt = {
 		name = 'Mouse Hole',
 		text = {
-			"Lowest-ranked card of the played hand",
+			"Lowest-ranked card",
+			"of the played hand",
 			"give {X:mult,C:white} X1.5 {} Mult when scored",
 			"{C:inactive}(Requires at least two different rank cards)"
 		}
@@ -840,12 +841,13 @@ SMODS.Joker {
 	loc_txt = {
 		name = 'Archduke',
 		text = {
-			"Jokers grant their {C:dark_edition}edition{} bonus",
-			"when a card from the",
-			"same {C:dark_edition}edition{} is scored"
+			"{C:attention}Jokers{} grant their",
+			"{C:dark_edition}edition{} bonus when a",
+			"card from the same",
+			"{C:dark_edition}edition{} is scored"
 		}
 	},
-	config = { extra = { activated = false } },
+	config = { },
 	rarity = 3,
 	atlas = 'BalapoJokers',
 	pos = { x = 1, y = 1 },
@@ -883,73 +885,46 @@ SMODS.Joker {
 
 					if other_joker.edition.holo and context.other_card.edition.holo then
 
-						--[[
-						G.E_MANAGER:add_event(Event({
-							func = function()
-								other_joker:juice_up(0.5, 0.5)
-								return true
-							end
-						}))
-						]]
-						-- TODO ADD HOLO BONUS
-
-						ret.card = other_joker
+						ret.func = function()
+							G.E_MANAGER:add_event(Event({
+								func = function()
+									other_joker:juice_up(0.1, 0.1)
+									return true
+								end
+							}))
+						end
 						ret.extra = {
-							mult = 10
+							mult = 10,
+							no_juice = true
 						}
 						ret = ret.extra
 
 					end
 
 					if other_joker.edition.foil and context.other_card.edition.foil then
-						--[[
-						G.E_MANAGER:add_event(Event({
-							trigger = "after",
-    						delay = 1,
-							func = function()
-								other_joker:juice_up(0.5, 0.5)
-								return true
-							end
-						}))
-						]]
-						-- TODO ADD FOIL BONUS
 
-						ret.card = other_joker
+						ret.func = function()
+							G.E_MANAGER:add_event(Event({
+								func = function()
+									other_joker:juice_up(0.1, 0.1)
+									return true
+								end
+							}))
+						end
 						ret.extra = {
-							chips = 50
+							chips = 50,
+							no_juice = true
 						}
 						ret = ret.extra
-
-						--[[
-						return {
-							chips = 50,
-							extra = {
-								chips = 50,
-								extra = {
-									chips = 50
-								}
-							}
-						}
-						]]
 
 					end
 
 					if other_joker.edition.polychrome and context.other_card.edition.polychrome then
-						--[[
-						G.E_MANAGER:add_event(Event({
-							func = function()
-								other_joker:juice_up(0.5, 0.5)
-								return true
-							end
-						}))
-						]]
-						-- TODO ADD FOIL BONUS
 
-						--ret.card = other_joker
 						ret.func = function()
 							G.E_MANAGER:add_event(Event({
 								func = function()
-									other_joker:juice_up(0.5, 0.5)
+									other_joker:juice_up(0.1, 0.1)
 									return true
 								end
 							}))
@@ -967,6 +942,7 @@ SMODS.Joker {
 			end
 
 			if realRet.extra then
+			if realRet.extra.extra then
 				return realRet
 			end
 
