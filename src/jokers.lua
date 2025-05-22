@@ -342,10 +342,16 @@ SMODS.Joker {
 	unlocked = true,
 	discovered = true,
 	blueprint_compat = false,
+	eternal_compat = false,
 	calculate = function(self, card, context)
 
 		-- ON SELF SELLING
 		if context.selling_self and not context.blueprint then
+
+			-- Self Negative case
+			if card.edition and card.edition.negative then
+				card.ability.extra.negative_joker_sold = card.ability.extra.negative_joker_sold + 1
+			end
 
 			if card.ability.extra.negative_joker_sold < 1 then
 				return
@@ -432,6 +438,7 @@ SMODS.Joker {
 	unlocked = true,
 	discovered = true,
 	blueprint_compat = false,
+	eternal_compat = false,
 	calculate = function(self, card, context)
 
 		-- ON SELLING
