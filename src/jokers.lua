@@ -261,36 +261,29 @@ SMODS.Joker {
 	blueprint_compat = true,
 	calculate = function(self, card, context)
 
-		-- Reset
-		if context.after and not context.blueprint then
-
-			--sendDebugMessage("Auralist after")
-
-			if card.ability.extra.ace_played >= 5 then
-				--sendDebugMessage("Auralist reset")
-				card.ability.extra.ace_played = card.ability.extra.ace_played - 5
-			end
-
-		end
-
-		if context.joker_main then
-
-			-- Prevent boost if blueprint
-			if not context.blueprint then
+		if context.before and
+		context.main_eval and
+		not context.blueprint then
 
 				local ace_cards = 0
-            	for k, v in ipairs(context.scoring_hand) do
+            for _, v in ipairs(context.scoring_hand) do
             	    if v:get_id() == 14 and not v.debuff then ace_cards = ace_cards + 1 end
         	    end
 
-				--sendDebugMessage("Auralist boost")
 				card.ability.extra.ace_played = card.ability.extra.ace_played + ace_cards
 
 			end
 
+		if context.after and not context.blueprint then
+			if card.ability.extra.ace_played >= 5 then
+				card.ability.extra.ace_played = card.ability.extra.ace_played - 5
+			end
+		end
+
+		if context.joker_main then
+
 			if card.ability.extra.ace_played >= 5 and #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit then
 
-				--sendDebugMessage("Auralist invoked")
                 G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + 1
 
                 G.E_MANAGER:add_event(Event({
