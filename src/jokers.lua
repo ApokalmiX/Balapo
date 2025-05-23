@@ -687,11 +687,14 @@ SMODS.Joker {
 		text = {
 			"Lowest-ranked card",
 			"of the played hand",
-			"give {X:mult,C:white} X1.5 {} Mult when scored",
+			"give {X:mult,C:white} X#1# {} Mult when scored",
 			"{C:inactive}(Requires at least two different rank cards)"
 		}
 	},
-	config = { extra = { current_lowest_rank = 0 } },
+	loc_vars = function(self, info_queue, card)
+		return { vars = { card.ability.extra.x_mult } }
+	end,
+	config = { extra = { current_lowest_rank = 0, x_mult = 1.5 } },
 	rarity = 2,
 	atlas = 'BalapoJokers',
 	pos = { x = 4, y = 1 },
@@ -704,11 +707,6 @@ SMODS.Joker {
 		-- Lowest rank calculation
 		if context.before and not context.blueprint then
 			card.ability.extra.current_lowest_rank = get_smallest_id_if_multiple_ids(context.scoring_hand)
-			--[[if (card.ability.extra.current_lowest_rank == nil) then
-			sendDebugMessage("Mouse hole calculation: NONE")
-		else
-			sendDebugMessage("Mouse hole calculation: ".. card.ability.extra.current_lowest_rank)
-		end]]
 	end
 
 	if context.individual and context.cardarea == G.play then
@@ -717,7 +715,7 @@ SMODS.Joker {
 		end
 		if context.other_card:get_id() == card.ability.extra.current_lowest_rank then
 			return {
-				x_mult = 1.5,
+				x_mult = card.ability.extra.x_mult,
 				card = card
 			}
 		end
@@ -752,7 +750,7 @@ SMODS.Joker {
 			"every {C:attention}3{} triggers"
 		}
 	},
-	config = { extra = { current_mult = 0, right_joker = nil } },
+	config = { extra = { current_mult = 0 } },
 	rarity = 3,
 	atlas = 'BalapoJokers',
 	pos = { x = 0, y = 2 },
@@ -762,48 +760,19 @@ SMODS.Joker {
 	blueprint_compat = true,
 	calculate = function(self, card, context)
 
-		-- todo : maybe reset at the end of the hand
-		if context.after and not context.blueprint then
-			card.ability.extra.right_joker = nil
-			return
-		end
-
 		-- Reset triggers table and get joker to copy
 		if context.before and not context.blueprint then
 
-			card.ability.extra.right_joker = nil
-
-			for i = 1, #G.jokers.cards do
-				if G.jokers.cards[i] == card then
-					card.ability.extra.right_joker = G.jokers.cards[i+1]
-				end
-			end
-
 			-- Reset trigger count for played cards
-			--for i, playing_card in ipairs(G.playing_cards) do
 			for i, playing_card in ipairs(context.full_hand) do
 				playing_card.inception_trigger = nil
 			end
 
-			if card.ability.extra.right_joker == nil then
-				--sendDebugMessage("No right_joker founded")
-			else
-				--sendDebugMessage("right_joker calculated:".. card.ability.extra.right_joker.ability.name)
-			end
-
 		end
 
-
-		--if context.individual and (context.cardarea == G.play or context.cardarea == G.hand) then
 		if context.individual and context.cardarea == G.play then
 
 			if context.other_card == nil then
-				return
-			end
-
-			-- prevent calculation if joker to the right is null
-			if card.ability.extra.right_joker == nil then
-				--sendDebugMessage("No right_joker calculated, return")
 				return
 			end
 
@@ -831,30 +800,80 @@ SMODS.Joker {
 				if isBefore(context.blueprint_card, card) then
 					-- the trigger count is not incremented yet
 					applyMult = context.other_card.inception_trigger == 2
-					--sendDebugMessage("Blueprint_card is before")
 				else
 					applyMult = context.other_card.inception_trigger == 3
-					--sendDebugMessage("Blueprint_card is after")
 				end
 			else
 				applyMult = context.other_card.inception_trigger == 3
 			end
 
 			if applyMult then
-				-- Mult update (realtime)
-				card.ability.extra.current_mult = 0
-				if card.ability.extra.right_joker and card.ability.extra.right_joker ~= card then
-					card.ability.extra.current_mult = card.ability.extra.right_joker.ability.x_mult
-					--sendDebugMessage("Inception xMult:"..card.ability.extra.current_mult)
+
+				-- right joker calculation
+				local right_joker = nil
+				for i = 1, #G.jokers.cards do
+					if G.jokers.cards[i] == card then
+						right_joker = G.jokers.cards[i+1]
+					end
 				end
-				if card.ability.extra.current_mult > 0 then
+				if right_joker == nil then
+					return
+				end
+
+				-- Mult update (realtime)
+				card.ability.extra.current_mult = 1
+				if right_joker ~= card then
+
+					-- This way of doing things is not very clean but there is no
+					-- unique way to detect the xmult of a joker, so we handle all
+					-- the special cases manually.
+
+					if right_joker.ability.name == 'Steel Joker' then
+						-- Specific case for Stone Joker (Realtime xmult calculation)
+						card.ability.extra.current_mult = 1 + right_joker.ability.extra*right_joker.ability.steel_tally
+
+					elseif
+					right_joker.ability.name == 'Baseball Card' or
+					right_joker.ability.name == 'Acrobat' or
+					right_joker.ability.name == 'Flower Pot' or
+					right_joker.ability.name == 'Seeing Double' or
+					right_joker.ability.name == "Driver's License" or
+					right_joker.ability.name == "Blackboard" then
+						card.ability.extra.current_mult = right_joker.ability.extra
+
+					elseif right_joker.ability.name == 'Caino' then
+						card.ability.extra.current_mult = right_joker.ability.caino_xmult
+
+					elseif right_joker.ability.x_mult > 1 then
+						-- Normal xMult case
+						card.ability.extra.current_mult = right_joker.ability.x_mult
+
+					elseif right_joker.ability.extra then
+
+						if right_joker.ability.extra.x_mult and right_joker.ability.extra.x_mult > 1 then
+							-- Specific case for custom jokers
+							card.ability.extra.current_mult = right_joker.ability.extra.x_mult
+
+						elseif right_joker.ability.extra.Xmult and right_joker.ability.extra.Xmult > 1 then
+							-- Specific case for Loyalty Card, Cavendish and Card Sharp
+							card.ability.extra.current_mult = right_joker.ability.extra.Xmult
+						end
+					end
+
+					-- Prevent nil attribution
+					if card.ability.extra.current_mult == nil then
+						card.ability.extra.current_mult = 1
+				end
+
+				end
+
+				if card.ability.extra.current_mult > 1 then
 					return {
 						x_mult = card.ability.extra.current_mult,
 						card = card
 					}
-				else
-					return
 				end
+
 			end
 
 		end
