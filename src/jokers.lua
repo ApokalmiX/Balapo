@@ -230,6 +230,76 @@ SMODS.Joker {
 }
 
 --
+-- Reformatting
+--
+
+SMODS.Joker {
+	key = 'reformatting',
+	loc_txt = {
+		name = 'Reformatting',
+		text = {
+			"When {C:attention}Blind{} is selected,",
+			"remove the {C:dark_edition}edition{} of",
+			"the {C:attention}Joker{} to the right",
+			"and gains {X:mult,C:white}X#2#{} Mult",
+			"{C:inactive}(Currently {X:mult,C:white}X#1#{}{C:inactive} Mult)"
+		}
+	},
+	loc_vars = function(self, info_queue, card)
+		return { vars = { card.ability.x_mult, card.ability.extra.xmult_bonus } }
+	end,
+	config = { extra = { xmult_bonus = 1 } },
+	rarity = 3,
+	atlas = 'BalapoJokers',
+	pos = { x = 4, y = 0 },
+	cost = 10,
+	unlocked = true,
+	discovered = true,
+	blueprint_compat = true,
+	calculate = function(self, card, context)
+
+		if context.setting_blind and not context.blueprint then
+
+			local current_pos = 0
+			for i = 1, #G.jokers.cards do
+				if G.jokers.cards[i] == card then
+					current_pos = i
+					break
+				end
+			end
+
+			local other_joker = G.jokers.cards[current_pos+1]
+
+			if other_joker and other_joker.edition then
+
+				G.E_MANAGER:add_event(Event({
+					func = function()
+						card.ability.x_mult = card.ability.x_mult + card.ability.extra.xmult_bonus
+						card:juice_up(0.8, 0.8)
+						other_joker:set_edition(nil, true)
+						other_joker:set_cost()
+						play_sound('slice1', 0.96 + math.random() * 0.08)
+						return true
+					end
+				}))
+
+				card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize('k_upgrade_ex'), colour = G.C.MULT, delay = 0.75, card = card})
+				return
+
+			end
+
+		end
+
+		if context.joker_main then
+			return {
+				x_mult = card.ability.x_mult
+			}
+		end
+
+	end
+}
+
+--
 -- Collector's Album
 --
 
@@ -483,7 +553,8 @@ SMODS.Joker {
 		text = {
 			"Sell this card to",
 			"apply {C:attention}Eternal{} to",
-			"all other Jokers"
+			"all other Jokers",
+			"{C:inactive}(If compatible)"
 		}
 	},
 	config = { },
@@ -512,127 +583,6 @@ SMODS.Joker {
 	            card_eval_status_text(card, 'extra', nil, nil, nil, {message = 'Eternalized!'})
             end
 
-		end
-
-	end
-}
-
---
--- 7th Gate
---
-
-SMODS.Joker {
-	key = 'sevengate',
-	loc_txt = {
-		name = '7th Gate',
-		text = {
-			"When a hand is played,",
-			"if exactly {C:attention}7{} cards",
-			"are held in hand,",
-			"apply a random {C:attention}Enhancement{} to",
-			"each card played"
-		}
-	},
-	config = { },
-	rarity = 2,
-	atlas = 'BalapoJokers',
-	pos = { x = 4, y = 0 },
-	cost = 7,
-	unlocked = true,
-	discovered = true,
-	blueprint_compat = false,
-	calculate = function(self, card, context)
-
-		if context.before then
-
-			local all_cards = 0
-
-			for k, v in ipairs(G.hand.cards) do
-				all_cards = all_cards + 1
-	        end
-
-	        if all_cards == 7 then
-
-				for k, v in ipairs(G.play.cards) do
-					if v.ability.set ~= 'Enhanced' then
-						local enhancement = nil
-
-						repeat
-							enhancement = pseudorandom_element(G.P_CENTER_POOLS["Enhanced"], pseudoseed('sevengate'))
-						until(enhancement.key ~= 'm_stone')
-
-						v:set_ability(enhancement, nil, true)
-						G.E_MANAGER:add_event(Event({
-                        	func = function()
-                            	v:juice_up()
-                                return true
-                            end
-                        }))
-
-					end
-		        end
-				card_eval_status_text(card, 'extra', nil, nil, nil, {message = 'Awakening!'})
-
-			end
-		end
-
-	end
-}
-
---
--- Acceleration
---
-
-SMODS.Joker {
-	key = 'acceleration',
-	loc_txt = {
-		name = 'Acceleration',
-		text = {
-			"{C:attention}+1{} hand size",
-			"after each hand played,",
-			"resets at the end of the round";
-			"{C:inactive}(Currently {C:attention}+#1#{C:inactive} hand size)"
-		}
-	},
-	config = { extra = { h_size = 0 } },
-	rarity = 2,
-	atlas = 'BalapoJokers',
-	pos = { x = 5, y = 0 },
-	loc_vars = function(self, info_queue, card)
-		return { vars = { card.ability.extra.h_size } }
-	end,
-	cost = 7,
-	unlocked = true,
-	discovered = true,
-	blueprint_compat = false,
-	add_to_deck = function(self, card, from_debuff)
-		G.hand:change_size(card.ability.extra.h_size)
-	end,
-	remove_from_deck = function(self, card, from_debuff)
-		G.hand:change_size(-card.ability.extra.h_size)
-	end,
-	calculate = function(self, card, context)
-
-		-- Reset end of round
-		if context.end_of_round and not context.blueprint and card.ability.extra.h_size > 0 then
-			G.hand:change_size(-card.ability.extra.h_size)
-			card.ability.extra.h_size = 0
-			return {
-				message = localize('k_reset'),
-				colour = G.C.RED,
-				card = card
-			}
-		end
-
-		-- Hand size increment
-		if context.before and not context.blueprint then
-			card.ability.extra.h_size = card.ability.extra.h_size+1
-			G.hand:change_size(1)
-			return {
-				message = '+1 hand size!',
-				colour = G.C.RED,
-				card = card
-			}
 		end
 
 	end
@@ -705,8 +655,8 @@ SMODS.Joker {
 	calculate = function(self, card, context)
 
 		-- Lowest rank calculation
-		if context.before and not context.blueprint then
-			card.ability.extra.current_lowest_rank = get_smallest_id_if_multiple_ids(context.scoring_hand)
+	if context.before and not context.blueprint then
+		card.ability.extra.current_lowest_rank = get_smallest_id_if_multiple_ids(context.scoring_hand)
 	end
 
 	if context.individual and context.cardarea == G.play then
@@ -863,7 +813,7 @@ SMODS.Joker {
 					-- Prevent nil attribution
 					if card.ability.extra.current_mult == nil then
 						card.ability.extra.current_mult = 1
-				end
+					end
 
 				end
 
@@ -876,6 +826,50 @@ SMODS.Joker {
 
 			end
 
+		end
+	end
+}
+
+--
+-- Straight to the Bed
+--
+
+SMODS.Joker {
+	key = 'straight_to_bed',
+	loc_txt = {
+		name = 'Straight to the Bed',
+		text = {
+			"Retrigger all cards played",
+			"{C:attention}2{} additional times",
+			"if played hand",
+			"contains a {C:attention}Straight{}"
+		}
+	},
+	config = { extra = { activated = false } },
+	rarity = 2,
+	atlas = 'BalapoJokers',
+	pos = { x = 5, y = 1 },
+	cost = 7,
+	unlocked = true,
+	discovered = true,
+	blueprint_compat = true,
+	calculate = function(self, card, context)
+
+		if context.before and not context.blueprint then
+			card.ability.extra.activated = false
+			if next(context.poker_hands['Straight']) then
+				card.ability.extra.activated = true
+			end
+		end
+
+		if card.ability.extra.activated and
+		context.repetition and
+		context.cardarea == G.play then
+			return {
+				message = localize('k_again_ex'),
+				repetitions = 2,
+				card = card
+			}
 		end
 	end
 }
@@ -1225,167 +1219,6 @@ SMODS.Joker {
 
 	end
 }
-
---
--- Straight to the Bed
---
-
-SMODS.Joker {
-	key = 'straight_to_bed',
-	loc_txt = {
-		name = 'Straight to the Bed',
-		text = {
-			"Retrigger all cards played",
-			"{C:attention}2{} additional times",
-			"if played hand",
-			"contains a {C:attention}Straight{}"
-		}
-	},
-	config = { extra = { activated = false } },
-	rarity = 2,
-	atlas = 'BalapoJokers',
-	pos = { x = 5, y = 1 },
-	cost = 7,
-	unlocked = true,
-	discovered = true,
-	blueprint_compat = true,
-	calculate = function(self, card, context)
-
-		if context.before and not context.blueprint then
-			card.ability.extra.activated = false
-			if next(context.poker_hands['Straight']) then
-				card.ability.extra.activated = true
-			end
-		end
-
-		if card.ability.extra.activated and
-		context.repetition and
-		context.cardarea == G.play then
-			return {
-				message = localize('k_again_ex'),
-				repetitions = 2,
-				card = card
-			}
-		end
-	end
-}
-
---
--- Edition remover
---
-
-SMODS.Joker {
-	key = 'edition_remover',
-	loc_txt = {
-		name = 'Edition remover',
-		text = {
-			"When {C:attention}Blind{} is selected,",
-			"remove the {C:dark_edition}edition{} of",
-			"the {C:attention}Joker{} to the right",
-			"and gains {X:mult,C:white}X#2#{} Mult",
-			"{C:inactive}(Currently {X:mult,C:white}X#1#{}{C:inactive} Mult)"
-		}
-	},
-	loc_vars = function(self, info_queue, card)
-		return { vars = { card.ability.x_mult, card.ability.extra.xmult_bonus } }
-	end,
-	config = { extra = { xmult_bonus = 1 } },
-	rarity = 3,
-	atlas = 'BalapoJokers',
-	pos = { x = 1, y = 1 },
-	cost = 10,
-	unlocked = true,
-	discovered = true,
-	blueprint_compat = true,
-	calculate = function(self, card, context)
-
-		if context.setting_blind and not context.blueprint then
-
-			local current_pos = 0
-			for i = 1, #G.jokers.cards do
-				if G.jokers.cards[i] == card then
-					current_pos = i
-					break
-				end
-			end
-
-			local other_joker = G.jokers.cards[current_pos+1]
-
-			if other_joker and other_joker.edition then
-
-				G.E_MANAGER:add_event(Event({
-					func = function()
-						card.ability.x_mult = card.ability.x_mult + card.ability.extra.xmult_bonus
-						card:juice_up(0.8, 0.8)
-						other_joker:set_edition(nil, true)
-						other_joker:set_cost()
-						play_sound('slice1', 0.96 + math.random() * 0.08)
-						return true
-					end
-				}))
-
-				card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize('k_upgrade_ex'), colour = G.C.MULT, delay = 0.75, card = card})
-				return
-
-			end
-
-		end
-
-		if context.joker_main then
-			return {
-				x_mult = card.ability.x_mult
-			}
-		end
-
-	end
-}
-
---
--- Hedysarum
---
-
-SMODS.Joker {
-	key = 'hedysarum',
-	loc_txt = {
-		name = 'Hedysarum',
-		text = {
-			"{C:attention}Wild cards{} can",
-			"no longer be",
-			"{C:attention}debuffed{}"
-		}
-	},
-	config = { },
-	rarity = 2,
-	atlas = 'BalapoJokers',
-	pos = { x = 1, y = 1 },
-	cost = 7,
-	unlocked = true,
-	discovered = true,
-	blueprint_compat = false,
-	calculate = function(self, card, context)
-
-	end
-}
-
--- store original Card:set_debuff function
-local original_set_debuff = Card.set_debuff
-
--- redefine set_debuff function
-function Card:set_debuff(should_debuff)
-
-	if next(SMODS.find_card('j_balapo_hedysarum')) then
-		for k, _ in pairs(SMODS.get_enhancements(self)) do
-			if k == 'm_wild' then
-				self.debuff = false
-				return
-			end
-		end
-	end
-
-	original_set_debuff(self, should_debuff)
-
-end
-
 
 -- Red Seal -> Si defausse, charge le joker, qui redistribue les trigger sur les cartes jouées
 -- Blue Seal -> Quand une blue seal score, genere une carte planète négative
