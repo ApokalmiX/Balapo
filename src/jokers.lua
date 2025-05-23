@@ -9,6 +9,10 @@ SMODS.Atlas {
 	py = 95
 }
 
+--
+-- Golden Eye
+--
+
 SMODS.Joker {
 	key = 'goldeneye',
 	loc_txt = {
@@ -116,51 +120,110 @@ end
 --
 
 SMODS.Joker {
-	key = 'Eightiesjoker',
+	key = 'eighties_joker',
 	loc_txt = {
 		name = 'Eighties Joker',
 		text = {
-			"Reverse {C:chips}Chips{} and",
-			"{C:mult}Mult{} when activated"
+			"{C:attention}Jokers{} grant their",
+			"{C:dark_edition}edition{} bonus when a",
+			"card from the same",
+			"{C:dark_edition}edition{} is scored"
 		}
 	},
 	config = { },
-	rarity = 2,
+	rarity = 3,
 	atlas = 'BalapoJokers',
 	pos = { x = 0, y = 1 },
-	cost = 7,
+	cost = 10,
 	unlocked = true,
 	discovered = true,
 	blueprint_compat = true,
 	calculate = function(self, card, context)
 
-		if context.joker_main then
-			--sendDebugMessage("Eightiesjoker swapped")
-			--card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize('k_swapped_ex'), colour = G.C.PURPLE, delay = 0.75, card = card})
+		if context.individual and context.cardarea == G.play and context.other_card then
 
-			return {
-				swap = true,
-				message =  localize('k_swapped_ex'),
-				colour = G.C.PURPLE,
-				func = (function()
+			if context.other_card.edition == nil then
+				return
+			end
 
-					G.E_MANAGER:add_event(Event({
-    					func = function()
+			if context.other_card.debuff then
+				return
+			end
 
-							play_sound('gong', 0.94*0.8, 0.3)
-							play_sound('gong', 0.94*1.5, 0.2)
-							ease_colour(G.C.UI_CHIPS, G.C.RED)
-							ease_colour(G.C.UI_MULT, G.C.BLUE)
-					        ease_colour(G.C.UI_CHIPS, G.C.BLUE, 2)
-		                    ease_colour(G.C.UI_MULT, G.C.RED, 2)
-
-        					return true
-    					end
-					}))
-
-					return true
-					end)
+			local ret = {
+				no_juice = true
 			}
+			local realRet = {
+				extra = ret
+			}
+
+			for i = 1, #G.jokers.cards do
+
+				local other_joker = G.jokers.cards[i]
+				if other_joker.edition then
+
+					if other_joker.edition.holo and context.other_card.edition.holo then
+
+						ret.func = function()
+							G.E_MANAGER:add_event(Event({
+								func = function()
+									other_joker:juice_up(0.1, 0.1)
+									return true
+								end
+							}))
+						end
+						ret.extra = {
+							mult = 10,
+							no_juice = true
+						}
+						ret = ret.extra
+
+					end
+
+					if other_joker.edition.foil and context.other_card.edition.foil then
+
+						ret.func = function()
+							G.E_MANAGER:add_event(Event({
+								func = function()
+									other_joker:juice_up(0.1, 0.1)
+									return true
+								end
+							}))
+						end
+						ret.extra = {
+							chips = 50,
+							no_juice = true
+						}
+						ret = ret.extra
+
+					end
+
+					if other_joker.edition.polychrome and context.other_card.edition.polychrome then
+
+						ret.func = function()
+							G.E_MANAGER:add_event(Event({
+								func = function()
+									other_joker:juice_up(0.1, 0.1)
+									return true
+								end
+							}))
+						end
+						ret.extra = {
+							x_mult = 1.5,
+							no_juice = true
+						}
+						ret = ret.extra
+
+					end
+
+				end
+
+			end
+
+			if realRet.extra.extra then
+				return realRet
+			end
+
 		end
 
 	end
@@ -265,14 +328,14 @@ SMODS.Joker {
 		context.main_eval and
 		not context.blueprint then
 
-				local ace_cards = 0
+			local ace_cards = 0
             for _, v in ipairs(context.scoring_hand) do
-            	    if v:get_id() == 14 and not v.debuff then ace_cards = ace_cards + 1 end
-        	    end
+                if v:get_id() == 14 and not v.debuff then ace_cards = ace_cards + 1 end
+        	end
 
-				card.ability.extra.ace_played = card.ability.extra.ace_played + ace_cards
+			card.ability.extra.ace_played = card.ability.extra.ace_played + ace_cards
 
-			end
+		end
 
 		if context.after and not context.blueprint then
 			if card.ability.extra.ace_played >= 5 then
@@ -612,6 +675,11 @@ local function get_smallest_id_if_multiple_ids(scoring_hand)
 	return min_id
 end
 
+--
+-- Mouse Hole
+--
+
+
 SMODS.Joker {
 	key = 'mousehole',
 	loc_txt = {
@@ -668,6 +736,10 @@ local function isBefore(currentJoker, relativeJoker)
 	end
 	return false
 end
+
+--
+-- Inception
+--
 
 SMODS.Joker {
 	key = 'inception',
@@ -789,329 +861,9 @@ SMODS.Joker {
 	end
 }
 
-SMODS.Joker {
-	key = 'straight_to_bed',
-	loc_txt = {
-		name = 'Straight to the Bed',
-		text = {
-			"Retrigger all cards played",
-			"{C:attention}2{} additional times",
-			"if played hand",
-			"contains a {C:attention}Straight{}"
-		}
-	},
-	config = { extra = { activated = false } },
-	rarity = 2,
-	atlas = 'BalapoJokers',
-	pos = { x = 5, y = 1 },
-	cost = 7,
-	unlocked = true,
-	discovered = true,
-	blueprint_compat = true,
-	calculate = function(self, card, context)
-
-		if context.before and not context.blueprint then
-			card.ability.extra.activated = false
-			if next(context.poker_hands['Straight']) then
-				card.ability.extra.activated = true
-			end
-		end
-
-		if card.ability.extra.activated and
-		context.repetition and
-		context.cardarea == G.play then
-			return {
-				message = localize('k_again_ex'),
-				repetitions = 2,
-				card = card
-			}
-		end
-	end
-}
-
-SMODS.Joker {
-	key = 'archduke',
-	loc_txt = {
-		name = 'Archduke',
-		text = {
-			"{C:attention}Jokers{} grant their",
-			"{C:dark_edition}edition{} bonus when a",
-			"card from the same",
-			"{C:dark_edition}edition{} is scored"
-		}
-	},
-	config = { },
-	rarity = 3,
-	atlas = 'BalapoJokers',
-	pos = { x = 1, y = 1 },
-	cost = 10,
-	unlocked = true,
-	discovered = true,
-	blueprint_compat = true,
-	calculate = function(self, card, context)
-
-		if context.post_trigger then
-			--sendDebugMessage("post_trigger")
-		end
-
-		if context.individual and context.cardarea == G.play and context.other_card then
-
-			if context.other_card.edition == nil then
-				return
-			end
-
-			if context.other_card.debuff then
-				return
-			end
-
-			local ret = {
-				no_juice = true
-			}
-			local realRet = {
-				extra = ret
-			}
-
-			for i = 1, #G.jokers.cards do
-
-				local other_joker = G.jokers.cards[i]
-				if other_joker.edition then
-
-					if other_joker.edition.holo and context.other_card.edition.holo then
-
-						ret.func = function()
-							G.E_MANAGER:add_event(Event({
-								func = function()
-									other_joker:juice_up(0.1, 0.1)
-									return true
-								end
-							}))
-						end
-						ret.extra = {
-							mult = 10,
-							no_juice = true
-						}
-						ret = ret.extra
-
-					end
-
-					if other_joker.edition.foil and context.other_card.edition.foil then
-
-						ret.func = function()
-							G.E_MANAGER:add_event(Event({
-								func = function()
-									other_joker:juice_up(0.1, 0.1)
-									return true
-								end
-							}))
-						end
-						ret.extra = {
-							chips = 50,
-							no_juice = true
-						}
-						ret = ret.extra
-
-					end
-
-					if other_joker.edition.polychrome and context.other_card.edition.polychrome then
-
-						ret.func = function()
-							G.E_MANAGER:add_event(Event({
-								func = function()
-									other_joker:juice_up(0.1, 0.1)
-									return true
-								end
-							}))
-						end
-						ret.extra = {
-							x_mult = 1.5,
-							no_juice = true
-						}
-						ret = ret.extra
-
-					end
-
-				end
-
-			end
-
-			if realRet.extra.extra then
-				return realRet
-			end
-
-		end
-
-	end
-}
-
-SMODS.Joker {
-	key = 'edition_remover',
-	loc_txt = {
-		name = 'Edition remover',
-		text = {
-			"When {C:attention}Blind{} is selected,",
-			"remove the {C:dark_edition}edition{} of",
-			"the {C:attention}Joker{} to the right",
-			"and gains {X:mult,C:white}X#2#{} Mult",
-			"{C:inactive}(Currently {X:mult,C:white}X#1#{}{C:inactive} Mult)"
-		}
-	},
-	loc_vars = function(self, info_queue, card)
-		return { vars = { card.ability.x_mult, card.ability.extra.xmult_bonus } }
-	end,
-	config = { extra = { xmult_bonus = 1 } },
-	rarity = 3,
-	atlas = 'BalapoJokers',
-	pos = { x = 1, y = 1 },
-	cost = 10,
-	unlocked = true,
-	discovered = true,
-	blueprint_compat = true,
-	calculate = function(self, card, context)
-
-		if context.setting_blind and not context.blueprint then
-
-			local current_pos = 0
-			for i = 1, #G.jokers.cards do
-				if G.jokers.cards[i] == card then
-					current_pos = i
-					break
-				end
-			end
-
-			local other_joker = G.jokers.cards[current_pos+1]
-
-			if other_joker and other_joker.edition then
-
-				G.E_MANAGER:add_event(Event({
-					func = function()
-						card.ability.x_mult = card.ability.x_mult + card.ability.extra.xmult_bonus
-						card:juice_up(0.8, 0.8)
-						other_joker:set_edition(nil, true)
-						other_joker:set_cost()
-						play_sound('slice1', 0.96 + math.random() * 0.08)
-						return true
-					end
-				}))
-
-				card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize('k_upgrade_ex'), colour = G.C.MULT, delay = 0.75, card = card})
-				return
-
-			end
-
-		end
-
-		if context.joker_main then
-			return {
-				x_mult = card.ability.x_mult
-			}
-		end
-
-	end
-}
-
-SMODS.Joker {
-	key = 'hedysarum',
-	loc_txt = {
-		name = 'Hedysarum',
-		text = {
-			"{C:attention}Wild cards{} can",
-			"no longer be",
-			"{C:attention}debuffed{}"
-		}
-	},
-	config = { },
-	rarity = 2,
-	atlas = 'BalapoJokers',
-	pos = { x = 1, y = 1 },
-	cost = 7,
-	unlocked = true,
-	discovered = true,
-	blueprint_compat = false,
-	calculate = function(self, card, context)
-
-	end
-}
-
--- store original Card:set_debuff function
-local original_set_debuff = Card.set_debuff
-
--- redefine set_debuff function
-function Card:set_debuff(should_debuff)
-
-	if next(SMODS.find_card('j_balapo_hedysarum')) then
-		for k, _ in pairs(SMODS.get_enhancements(self)) do
-			if k == 'm_wild' then
-				self.debuff = false
-				return
-			end
-		end
-	end
-
-	original_set_debuff(self, should_debuff)
-
-end
-
-SMODS.Joker {
-	key = 'zinzolin',
-	loc_txt = {
-		name = 'Zinzolin',
-		text = {
-			"{C:purple}Purple Seal{} have",
-			"{C:green}#1# in #2#{} chance to",
-			"create {C:spectral}Spectral{} card"
-		}
-	},
-	config = { extra = { odds = 2 } },
-	rarity = 2,
-	atlas = 'BalapoJokers',
-	pos = { x = 1, y = 2 },
-	cost = 5,
-	unlocked = true,
-	discovered = true,
-	blueprint_compat = false,
-	loc_vars = function(self, info_queue, card)
-		return { vars = { G.GAME and G.GAME.probabilities.normal or 1, card.ability.extra.odds } }
-	end,
-	calculate = function(self, card, context)
-
-	end
-}
-
-local original_calculate_seal = Card.calculate_seal
-
-function Card:calculate_seal(context)
-
-	if not self.debuff and context.discard and context.other_card == self then
-		if self.seal == 'Purple' and #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit then
-
-			local zinzolin = SMODS.find_card('j_balapo_zinzolin')[1]
-
-			if zinzolin then
-				if pseudorandom('j_balapo_zinzolin') < G.GAME.probabilities.normal / zinzolin.ability.extra.odds then
-
-					G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + 1
-					G.E_MANAGER:add_event(Event({
-						trigger = 'before',
-						delay = 0.0,
-						func = (function()
-							local card = create_card('Spectral',G.consumeables, nil, nil, nil, nil, nil, 'j_balapo_zinzolin')
-							card:add_to_deck()
-							G.consumeables:emplace(card)
-							G.GAME.consumeable_buffer = 0
-							return true
-						end)
-					}))
-					card_eval_status_text(self, 'extra', nil, nil, nil, {message = localize('k_plus_spectral'), colour = G.C.SECONDARY_SET.Spectral})
-					return nil, true
-				end
-			end
-
-		end
-	end
-
-	return original_calculate_seal(self, context)
-
-end
+--
+-- Alizarin
+--
 
 SMODS.Joker {
 	key = 'alizarin',
@@ -1178,6 +930,10 @@ SMODS.Joker {
 
 	end
 }
+
+--
+-- Caerulean
+--
 
 SMODS.Joker {
 	key = 'caerulean',
@@ -1261,6 +1017,10 @@ SMODS.Joker {
 	end
 }
 
+--
+-- Gamboge
+--
+
 SMODS.Joker {
 	key = 'gamboge',
 	loc_txt = {
@@ -1331,6 +1091,76 @@ SMODS.Joker {
 	end
 }
 
+--
+-- Zinzolin
+--
+
+SMODS.Joker {
+	key = 'zinzolin',
+	loc_txt = {
+		name = 'Zinzolin',
+		text = {
+			"{C:purple}Purple Seal{} have",
+			"{C:green}#1# in #2#{} chance to",
+			"create {C:spectral}Spectral{} card"
+		}
+	},
+	config = { extra = { odds = 2 } },
+	rarity = 2,
+	atlas = 'BalapoJokers',
+	pos = { x = 1, y = 2 },
+	cost = 5,
+	unlocked = true,
+	discovered = true,
+	blueprint_compat = false,
+	loc_vars = function(self, info_queue, card)
+		return { vars = { G.GAME and G.GAME.probabilities.normal or 1, card.ability.extra.odds } }
+	end,
+	calculate = function(self, card, context)
+
+	end
+}
+
+local original_calculate_seal = Card.calculate_seal
+
+function Card:calculate_seal(context)
+
+	if not self.debuff and context.discard and context.other_card == self then
+		if self.seal == 'Purple' and #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit then
+
+			local zinzolin = SMODS.find_card('j_balapo_zinzolin')[1]
+
+			if zinzolin then
+				if pseudorandom('j_balapo_zinzolin') < G.GAME.probabilities.normal / zinzolin.ability.extra.odds then
+
+					G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + 1
+					G.E_MANAGER:add_event(Event({
+						trigger = 'before',
+						delay = 0.0,
+						func = (function()
+							local card = create_card('Spectral',G.consumeables, nil, nil, nil, nil, nil, 'j_balapo_zinzolin')
+							card:add_to_deck()
+							G.consumeables:emplace(card)
+							G.GAME.consumeable_buffer = 0
+							return true
+						end)
+					}))
+					card_eval_status_text(self, 'extra', nil, nil, nil, {message = localize('k_plus_spectral'), colour = G.C.SECONDARY_SET.Spectral})
+					return nil, true
+				end
+			end
+
+		end
+	end
+
+	return original_calculate_seal(self, context)
+
+end
+
+--
+-- Stellium
+--
+
 SMODS.Joker {
 	key = 'stellium',
 	loc_txt = {
@@ -1376,6 +1206,166 @@ SMODS.Joker {
 
 	end
 }
+
+--
+-- Straight to the Bed
+--
+
+SMODS.Joker {
+	key = 'straight_to_bed',
+	loc_txt = {
+		name = 'Straight to the Bed',
+		text = {
+			"Retrigger all cards played",
+			"{C:attention}2{} additional times",
+			"if played hand",
+			"contains a {C:attention}Straight{}"
+		}
+	},
+	config = { extra = { activated = false } },
+	rarity = 2,
+	atlas = 'BalapoJokers',
+	pos = { x = 5, y = 1 },
+	cost = 7,
+	unlocked = true,
+	discovered = true,
+	blueprint_compat = true,
+	calculate = function(self, card, context)
+
+		if context.before and not context.blueprint then
+			card.ability.extra.activated = false
+			if next(context.poker_hands['Straight']) then
+				card.ability.extra.activated = true
+			end
+		end
+
+		if card.ability.extra.activated and
+		context.repetition and
+		context.cardarea == G.play then
+			return {
+				message = localize('k_again_ex'),
+				repetitions = 2,
+				card = card
+			}
+		end
+	end
+}
+
+--
+-- Edition remover
+--
+
+SMODS.Joker {
+	key = 'edition_remover',
+	loc_txt = {
+		name = 'Edition remover',
+		text = {
+			"When {C:attention}Blind{} is selected,",
+			"remove the {C:dark_edition}edition{} of",
+			"the {C:attention}Joker{} to the right",
+			"and gains {X:mult,C:white}X#2#{} Mult",
+			"{C:inactive}(Currently {X:mult,C:white}X#1#{}{C:inactive} Mult)"
+		}
+	},
+	loc_vars = function(self, info_queue, card)
+		return { vars = { card.ability.x_mult, card.ability.extra.xmult_bonus } }
+	end,
+	config = { extra = { xmult_bonus = 1 } },
+	rarity = 3,
+	atlas = 'BalapoJokers',
+	pos = { x = 1, y = 1 },
+	cost = 10,
+	unlocked = true,
+	discovered = true,
+	blueprint_compat = true,
+	calculate = function(self, card, context)
+
+		if context.setting_blind and not context.blueprint then
+
+			local current_pos = 0
+			for i = 1, #G.jokers.cards do
+				if G.jokers.cards[i] == card then
+					current_pos = i
+					break
+				end
+			end
+
+			local other_joker = G.jokers.cards[current_pos+1]
+
+			if other_joker and other_joker.edition then
+
+				G.E_MANAGER:add_event(Event({
+					func = function()
+						card.ability.x_mult = card.ability.x_mult + card.ability.extra.xmult_bonus
+						card:juice_up(0.8, 0.8)
+						other_joker:set_edition(nil, true)
+						other_joker:set_cost()
+						play_sound('slice1', 0.96 + math.random() * 0.08)
+						return true
+					end
+				}))
+
+				card_eval_status_text(card, 'extra', nil, nil, nil, {message = localize('k_upgrade_ex'), colour = G.C.MULT, delay = 0.75, card = card})
+				return
+
+			end
+
+		end
+
+		if context.joker_main then
+			return {
+				x_mult = card.ability.x_mult
+			}
+		end
+
+	end
+}
+
+--
+-- Hedysarum
+--
+
+SMODS.Joker {
+	key = 'hedysarum',
+	loc_txt = {
+		name = 'Hedysarum',
+		text = {
+			"{C:attention}Wild cards{} can",
+			"no longer be",
+			"{C:attention}debuffed{}"
+		}
+	},
+	config = { },
+	rarity = 2,
+	atlas = 'BalapoJokers',
+	pos = { x = 1, y = 1 },
+	cost = 7,
+	unlocked = true,
+	discovered = true,
+	blueprint_compat = false,
+	calculate = function(self, card, context)
+
+	end
+}
+
+-- store original Card:set_debuff function
+local original_set_debuff = Card.set_debuff
+
+-- redefine set_debuff function
+function Card:set_debuff(should_debuff)
+
+	if next(SMODS.find_card('j_balapo_hedysarum')) then
+		for k, _ in pairs(SMODS.get_enhancements(self)) do
+			if k == 'm_wild' then
+				self.debuff = false
+				return
+			end
+		end
+	end
+
+	original_set_debuff(self, should_debuff)
+
+end
 
 
 -- Red Seal -> Si defausse, charge le joker, qui redistribue les trigger sur les cartes jouées
