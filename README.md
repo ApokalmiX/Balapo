@@ -4,6 +4,8 @@ Introduction
 -
 This is a custom mod for **Balatro** that introduces new and unique **Jokers** to enhance gameplay and add variety to your Endless Mode runs.
 
+See Joker details [here](https://apokalmix.github.io/balapo-jokers/)
+
 Requirements
 -
 - **Balatro** (v1.0.1o)
