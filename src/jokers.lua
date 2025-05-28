@@ -941,6 +941,14 @@ SMODS.Joker {
 			}
 		end
 
+	end,
+	in_pool = function(self, args)
+        for _, playing_card in ipairs(G.playing_cards or {}) do
+        	if playing_card.seal == 'Red' then
+        		return true
+            end
+        end
+        return false
 	end
 }
 
@@ -1027,6 +1035,14 @@ SMODS.Joker {
 
 		end
 
+	end,
+	in_pool = function(self, args)
+        for _, playing_card in ipairs(G.playing_cards or {}) do
+        	if playing_card.seal == 'Blue' then
+        		return true
+            end
+        end
+        return false
 	end
 }
 
@@ -1101,6 +1117,14 @@ SMODS.Joker {
 
 		end
 
+	end,
+	in_pool = function(self, args)
+        for _, playing_card in ipairs(G.playing_cards or {}) do
+        	if playing_card.seal == 'Gold' then
+        		return true
+            end
+        end
+        return false
 	end
 }
 
@@ -1131,6 +1155,14 @@ SMODS.Joker {
 	end,
 	calculate = function(self, card, context)
 
+	end,
+	in_pool = function(self, args)
+        for _, playing_card in ipairs(G.playing_cards or {}) do
+        	if playing_card.seal == 'Purple' then
+        		return true
+            end
+        end
+        return false
 	end
 }
 
