@@ -296,7 +296,15 @@ SMODS.Joker {
 			}
 		end
 
-	end
+	end,
+	in_pool = function(self, args)
+        for _, joker in ipairs(G.jokers.cards or {}) do
+        	if joker.edition ~= nil then
+        		return true
+            end
+        end
+        return false
+    end
 }
 
 --
@@ -362,7 +370,15 @@ SMODS.Joker {
 
 		end
 
-	end
+	end,
+	in_pool = function(self, args)
+        for _, playing_card in ipairs(G.playing_cards or {}) do
+        	if playing_card.edition ~= nil then
+        		return true
+            end
+        end
+        return false
+    end
 }
 
 --
@@ -949,7 +965,7 @@ SMODS.Joker {
             end
         end
         return false
-	end
+    end
 }
 
 --
@@ -1043,7 +1059,7 @@ SMODS.Joker {
             end
         end
         return false
-	end
+    end
 }
 
 --
@@ -1125,7 +1141,7 @@ SMODS.Joker {
             end
         end
         return false
-	end
+    end
 }
 
 --
@@ -1163,7 +1179,7 @@ SMODS.Joker {
             end
         end
         return false
-	end
+    end
 }
 
 local original_calculate_seal = Card.calculate_seal
