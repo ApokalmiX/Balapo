@@ -18,7 +18,7 @@ SMODS.Joker {
 	loc_txt = {
 		name = 'Golden Eye',
 		text = {
-			"This joker gains {X:mult,C:white}X#2#{} Mult",
+			"This Joker gains {X:mult,C:white}X#2#{} Mult",
 			"every time {C:money}${}",
 			"is obtained during the round,",
 			"resets at the end of the round",
@@ -160,7 +160,7 @@ SMODS.Joker {
 			for i = 1, #G.jokers.cards do
 
 				local other_joker = G.jokers.cards[i]
-				if other_joker.edition then
+				if other_joker.edition and not other_joker.debuff then
 
 					if other_joker.edition.holo and context.other_card.edition.holo then
 
@@ -671,23 +671,23 @@ SMODS.Joker {
 	calculate = function(self, card, context)
 
 		-- Lowest rank calculation
-	if context.before and not context.blueprint then
-		card.ability.extra.current_lowest_rank = get_smallest_id_if_multiple_ids(context.scoring_hand)
-	end
-
-	if context.individual and context.cardarea == G.play then
-		if card.ability.extra.current_lowest_rank == nil then
-			return
+		if context.before and not context.blueprint then
+			card.ability.extra.current_lowest_rank = get_smallest_id_if_multiple_ids(context.scoring_hand)
 		end
-		if context.other_card:get_id() == card.ability.extra.current_lowest_rank then
-			return {
-				x_mult = card.ability.extra.x_mult,
-				card = card
-			}
-		end
-	end
 
-end
+		if context.individual and context.cardarea == G.play then
+			if card.ability.extra.current_lowest_rank == nil then
+				return
+			end
+			if context.other_card:get_id() == card.ability.extra.current_lowest_rank then
+				return {
+					x_mult = card.ability.extra.x_mult,
+					card = card
+				}
+			end
+		end
+
+	end
 }
 
 local function isBefore(currentJoker, relativeJoker)
@@ -810,11 +810,14 @@ SMODS.Joker {
 					elseif right_joker.ability.name == 'Caino' then
 						card.ability.extra.current_mult = right_joker.ability.caino_xmult
 
+					elseif right_joker.ability.name == "Lucky Cat" then
+						card.ability.extra.current_mult = right_joker.ability.x_mult
+
 					elseif right_joker.ability.x_mult > 1 then
 						-- Normal xMult case
 						card.ability.extra.current_mult = right_joker.ability.x_mult
 
-					elseif right_joker.ability.extra then
+					elseif type(right_joker.ability.extra) == "table" then
 
 						if right_joker.ability.extra.x_mult and right_joker.ability.extra.x_mult > 1 then
 							-- Specific case for custom jokers
@@ -856,12 +859,14 @@ SMODS.Joker {
 		name = 'Straight to the Bed',
 		text = {
 			"Retrigger all cards played",
-			"{C:attention}2{} additional times",
 			"if played hand",
-			"contains a {C:attention}Straight{}"
+			"contains a {C:attention}Straight{},",
+			"Retriggers an additional time",
+			"if the played hand also",
+			"contains a {C:attention}Flush{}"
 		}
 	},
-	config = { extra = { activated = false } },
+	config = { extra = { repetitions = 0 } },
 	rarity = 2,
 	atlas = 'BalapoJokers',
 	pos = { x = 5, y = 1 },
@@ -872,18 +877,22 @@ SMODS.Joker {
 	calculate = function(self, card, context)
 
 		if context.before and not context.blueprint then
-			card.ability.extra.activated = false
+			card.ability.extra.repetitions = 0
 			if next(context.poker_hands['Straight']) then
-				card.ability.extra.activated = true
+				card.ability.extra.repetitions = 1
+				if next(context.poker_hands['Flush']) then
+					card.ability.extra.repetitions = 2
+				end
 			end
 		end
 
-		if card.ability.extra.activated and
+		if card.ability.extra.repetitions and
+		card.ability.extra.repetitions > 0 and
 		context.repetition and
 		context.cardarea == G.play then
 			return {
 				message = localize('k_again_ex'),
-				repetitions = 2,
+				repetitions = card.ability.extra.repetitions,
 				card = card
 			}
 		end
@@ -959,13 +968,13 @@ SMODS.Joker {
 
 	end,
 	in_pool = function(self, args)
-        for _, playing_card in ipairs(G.playing_cards or {}) do
-        	if playing_card.seal == 'Red' then
-        		return true
-            end
-        end
-        return false
-    end
+		for _, playing_card in ipairs(G.playing_cards or {}) do
+			if playing_card.seal == 'Red' then
+				return true
+			end
+		end
+		return false
+	end
 }
 
 --
@@ -1053,13 +1062,13 @@ SMODS.Joker {
 
 	end,
 	in_pool = function(self, args)
-        for _, playing_card in ipairs(G.playing_cards or {}) do
-        	if playing_card.seal == 'Blue' then
-        		return true
-            end
-        end
-        return false
-    end
+		for _, playing_card in ipairs(G.playing_cards or {}) do
+			if playing_card.seal == 'Blue' then
+				return true
+			end
+		end
+		return false
+	end
 }
 
 --
@@ -1073,14 +1082,14 @@ SMODS.Joker {
 		text = {
 			"Scored {C:money}Gold Seals{}",
 			"give {C:money}$#1#{} for each",
-			"{C:money}Gold Seal{} card",
+			"{C:attention}Gold{} card",
 			"held in hand"
 		}
 	},
 	loc_vars = function(self, info_queue, card)
 		return { vars = { card.ability.extra.dollars } }
 	end,
-	config = { extra = { dollars = 1 } },
+	config = { extra = { dollars = 3 } },
 	rarity = 2,
 	atlas = 'BalapoJokers',
 	pos = { x = 2, y = 2 },
@@ -1104,7 +1113,8 @@ SMODS.Joker {
 
 			for k, v in pairs(G.hand.cards) do
 				if v and
-				v.seal == 'Gold' and
+				SMODS.has_enhancement(v, 'm_gold') and
+				--v.seal == 'Gold' and
 				not v.debuff then
 
 					G.GAME.dollar_buffer = (G.GAME.dollar_buffer or 0) + card.ability.extra.dollars
@@ -1135,13 +1145,13 @@ SMODS.Joker {
 
 	end,
 	in_pool = function(self, args)
-        for _, playing_card in ipairs(G.playing_cards or {}) do
-        	if playing_card.seal == 'Gold' then
-        		return true
-            end
-        end
-        return false
-    end
+		for _, playing_card in ipairs(G.playing_cards or {}) do
+			if playing_card.seal == 'Gold' then
+				return true
+			end
+		end
+		return false
+	end
 }
 
 --
@@ -1173,13 +1183,13 @@ SMODS.Joker {
 
 	end,
 	in_pool = function(self, args)
-        for _, playing_card in ipairs(G.playing_cards or {}) do
-        	if playing_card.seal == 'Purple' then
-        		return true
-            end
-        end
-        return false
-    end
+		for _, playing_card in ipairs(G.playing_cards or {}) do
+			if playing_card.seal == 'Purple' then
+				return true
+			end
+		end
+		return false
+	end
 }
 
 local original_calculate_seal = Card.calculate_seal
@@ -1253,9 +1263,9 @@ SMODS.Joker {
 				v.ability.set == "Planet" and
 				not v.edition then
 
-				local edition = {negative = true}
-				v:set_edition(edition, true)
-				negatived = true
+					local edition = {negative = true}
+					v:set_edition(edition, true)
+					negatived = true
 				end
 			end
 
@@ -1267,9 +1277,3 @@ SMODS.Joker {
 
 	end
 }
-
--- Red Seal -> Si defausse, charge le joker, qui redistribue les trigger sur les cartes jouées
--- Blue Seal -> Quand une blue seal score, genere une carte planète négative
--- Gold Seal -> Augmente l'intérét de 1 par gold seal tenu en main
---			 -> Each Gold Seal held in hand give $2
---			 -> Lorsqu'une Gold Seal est scorée, ocrtoie $1 par Gold Seal tenu en main
