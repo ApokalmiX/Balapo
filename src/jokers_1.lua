@@ -841,7 +841,7 @@ SMODS.Joker {
 			"Scored {C:blue}Blue Seals{}",
 			"give {X:mult,C:white} X#1# {} Mult per level",
 			"of played {C:attention}poker hand{}",
-			"{C:inactive}(1 + #1# x level)"
+			"{C:inactive}(1 + {X:mult,C:white}#1#{C:inactive} x {C:attention}hand level{C:inactive})"
 		}
 	},
 	loc_vars = function(self, info_queue, card)
