@@ -9,10 +9,7 @@ SMODS.Atlas {
 	py = 95
 }
 
---
 -- Golden Eye
---
-
 SMODS.Joker {
 	key = 'goldeneye',
 	loc_txt = {
@@ -115,10 +112,7 @@ function updateState()
 
 end
 
---
 -- Eighties Joker
---
-
 SMODS.Joker {
 	key = 'eighties_joker',
 	loc_txt = {
@@ -229,10 +223,7 @@ SMODS.Joker {
 	end
 }
 
---
 -- Reformatting
---
-
 SMODS.Joker {
 	key = 'reformatting',
 	loc_txt = {
@@ -307,10 +298,7 @@ SMODS.Joker {
     end
 }
 
---
 -- Collector's Album
---
-
 SMODS.Joker {
 	key = 'collectorsalbum',
 	loc_txt = {
@@ -336,11 +324,6 @@ SMODS.Joker {
 		end
 
 		if context.individual and context.cardarea == G.hand and context.other_card then
-
-			--[[
-			if self.edition.foil then play_sound('foil1', 1.2, 0.4) end
-			if self.edition.holo then play_sound('holo1', 1.2*1.58, 0.4) end
-			if self.ed			 then play_sound('polychrome1', 1.2, 0.7) end]]
 
 			if context.other_card.edition == nil then
 				return
@@ -381,10 +364,7 @@ SMODS.Joker {
     end
 }
 
---
 -- Auralist
---
-
 SMODS.Joker {
 	key = 'auralist',
 	loc_txt = {
@@ -458,10 +438,7 @@ SMODS.Joker {
 	end
 }
 
---
 -- Ghost Joker
---
-
 SMODS.Joker {
 	key = 'ghostjoker',
 	loc_txt = {
@@ -487,7 +464,6 @@ SMODS.Joker {
 	eternal_compat = false,
 	calculate = function(self, card, context)
 
-		-- ON SELF SELLING
 		if context.selling_self and not context.blueprint then
 
 			-- Self Negative case
@@ -558,10 +534,7 @@ SMODS.Joker {
 	end
 }
 
---
 -- Jailed Joker
---
-
 SMODS.Joker {
 	key = 'jailedjoker',
 	loc_txt = {
@@ -584,7 +557,6 @@ SMODS.Joker {
 	eternal_compat = false,
 	calculate = function(self, card, context)
 
-		-- ON SELLING
 		if context.selling_self and not context.blueprint then
 
 			local jokers = {}
@@ -604,48 +576,7 @@ SMODS.Joker {
 	end
 }
 
---
 -- Mouse Hole
---
-
-local function get_smallest_id_if_multiple_ids(scoring_hand)
-	local cards = scoring_hand
-
-	if #cards < 2 then
-		return nil
-	end
-
-	local id_set = {}
-	for _, card in ipairs(cards) do
-		if card.ability.effect ~= 'Stone Card' then
-			id_set[card:get_id()] = true
-		end
-	end
-
-	local unique_ids_list = {}
-	for id in pairs(id_set) do
-		table.insert(unique_ids_list, id)
-	end
-
-	if #unique_ids_list < 2 then
-		return nil
-	end
-
-	local min_id = unique_ids_list[1]
-	for i = 2, #unique_ids_list do
-		if unique_ids_list[i] < min_id then
-			min_id = unique_ids_list[i]
-		end
-	end
-
-	return min_id
-end
-
---
--- Mouse Hole
---
-
-
 SMODS.Joker {
 	key = 'mousehole',
 	loc_txt = {
@@ -690,21 +621,40 @@ SMODS.Joker {
 	end
 }
 
-local function isBefore(currentJoker, relativeJoker)
-	for i, joker in ipairs(G.jokers.cards) do
-		if joker == currentJoker then
-			return true
-		elseif joker == relativeJoker then
-			return false
+local function get_smallest_id_if_multiple_ids(scoring_hand)
+	local cards = scoring_hand
+
+	if #cards < 2 then
+		return nil
+	end
+
+	local id_set = {}
+	for _, card in ipairs(cards) do
+		if card.ability.effect ~= 'Stone Card' then
+			id_set[card:get_id()] = true
 		end
 	end
-	return false
+
+	local unique_ids_list = {}
+	for id in pairs(id_set) do
+		table.insert(unique_ids_list, id)
+	end
+
+	if #unique_ids_list < 2 then
+		return nil
+	end
+
+	local min_id = unique_ids_list[1]
+	for i = 2, #unique_ids_list do
+		if unique_ids_list[i] < min_id then
+			min_id = unique_ids_list[i]
+		end
+	end
+
+	return min_id
 end
 
---
 -- Inception
---
-
 SMODS.Joker {
 	key = 'inception',
 	loc_txt = {
@@ -849,10 +799,18 @@ SMODS.Joker {
 	end
 }
 
---
--- Straight to the Bed
---
+local function isBefore(currentJoker, relativeJoker)
+	for i, joker in ipairs(G.jokers.cards) do
+		if joker == currentJoker then
+			return true
+		elseif joker == relativeJoker then
+			return false
+		end
+	end
+	return false
+end
 
+-- Straight to the Bed
 SMODS.Joker {
 	key = 'straight_to_bed',
 	loc_txt = {
@@ -899,10 +857,7 @@ SMODS.Joker {
 	end
 }
 
---
 -- Alizarin
---
-
 SMODS.Joker {
 	key = 'alizarin',
 	loc_txt = {
@@ -977,26 +932,22 @@ SMODS.Joker {
 	end
 }
 
---
 -- Caerulean
---
-
 SMODS.Joker {
 	key = 'caerulean',
 	loc_txt = {
 		name = 'Caerulean',
 		text = {
 			"Scored {C:blue}Blue Seals{}",
-			"give {X:mult,C:white} X#1# {} Mult for each",
-			"{C:planet}Planet{} card in your",
-			"{C:attention}consumable{} area for their",
-			"specified {C:attention}poker hand{}"
+			"give {X:mult,C:white} X#1# {} Mult per level",
+			"of played {C:attention}poker hand{}",
+			"{C:inactive}(1 + #1# x level)"
 		}
 	},
 	loc_vars = function(self, info_queue, card)
 		return { vars = { card.ability.extra.x_mult } }
 	end,
-	config = { extra = { x_mult = 1.5 } },
+	config = { extra = { x_mult = 0.02 } },
 	rarity = 2,
 	atlas = 'BalapoJokers',
 	pos = { x = 4, y = 2 },
@@ -1011,51 +962,17 @@ SMODS.Joker {
 		context.other_card and
 		context.other_card.seal == 'Blue' then
 
-			local ret = {
-				no_juice = true
-			}
-			local realRet = {
-				extra = ret
-			}
-
 			if G.GAME.last_hand_played then
-				local _planet = 0
-				for k, v in pairs(G.P_CENTER_POOLS.Planet) do
-					if v.config.hand_type == G.GAME.last_hand_played then
-						_planet = v.name
-					end
+
+				local level = G.GAME.hands[G.GAME.last_hand_played].level
+				local x_mult = 1 + (level*card.ability.extra.x_mult)
+
+				if x_mult > 1 then
+					return {
+						x_mult = x_mult,
+						card = card
+					}
 				end
-
-				if _planet == nil then
-					return
-				end
-
-				for k, v in pairs(G.consumeables.cards) do
-					if v and
-					v.ability and
-					v.ability.name == _planet and
-					not v.debuff then
-
-						ret.func = function()
-							G.E_MANAGER:add_event(Event({
-								func = function()
-									v:juice_up(0.1, 0.1)
-									return true
-								end
-							}))
-						end
-						ret.extra = {
-							x_mult = card.ability.extra.x_mult,
-							no_juice = true
-						}
-						ret = ret.extra
-
-					end
-				end
-			end
-
-			if realRet.extra.extra then
-				return realRet
 			end
 
 		end
@@ -1071,10 +988,7 @@ SMODS.Joker {
 	end
 }
 
---
 -- Gamboge
---
-
 SMODS.Joker {
 	key = 'gamboge',
 	loc_txt = {
@@ -1154,10 +1068,7 @@ SMODS.Joker {
 	end
 }
 
---
 -- Zinzolin
---
-
 SMODS.Joker {
 	key = 'zinzolin',
 	loc_txt = {
@@ -1228,19 +1139,15 @@ function Card:calculate_seal(context)
 
 end
 
---
 -- Stellium
---
-
 SMODS.Joker {
 	key = 'stellium',
 	loc_txt = {
 		name = 'Stellium',
 		text = {
-			"When {C:attention}Blind{} is selected,",
-			"applies {C:dark_edition}Negative{} to all",
-			"{C:planet}Planet{} cards in your",
-			"{C:attention}consumable{} area"
+			"{C:planet}Planet{} cards increase",
+			"hand level by the level",
+			"of the weakest {C:attention}poker hand{}"
 		}
 	},
 	config = { },
@@ -1252,28 +1159,48 @@ SMODS.Joker {
 	discovered = true,
 	blueprint_compat = false,
 	calculate = function(self, card, context)
-
-		if context.setting_blind and not context.blueprint then
-
-			local negatived = false
-
-			for k, v in pairs(G.consumeables.cards) do
-				if v and
-				v.ability and
-				v.ability.set == "Planet" and
-				not v.edition then
-
-					local edition = {negative = true}
-					v:set_edition(edition, true)
-					negatived = true
-				end
-			end
-
-			if negatived == true then
-				card_eval_status_text(card, 'extra', nil, nil, nil, {message = 'Negatived!'})
-			end
-
-		end
-
 	end
 }
+
+local original_level_up_hand = level_up_hand
+
+function level_up_hand(card, hand, instant, amount)
+
+	amount = amount or 1
+
+	if card and
+	card.ability and
+	card.ability.consumeable and
+	card.ability.consumeable.hand_type and
+	next(SMODS.find_card("j_balapo_stellium")) then
+
+		local weakest_level = nil
+
+		for k, v in pairs(G.GAME.hands) do
+
+			if v.visible then
+
+				if not weakest_level then
+					weakest_level = v.level
+				end
+
+				if v.level < weakest_level then
+					weakest_level = v.level
+				end
+
+			end
+
+        end
+
+		amount = weakest_level
+
+		original_level_up_hand(card, hand, instant, amount)
+		update_hand_text({sound = 'button', volume = 0.7, pitch = 0.9, delay = 0}, {level = "+" .. amount})
+		delay(1.3)
+		update_hand_text({sound = 'button', volume = 0.7, pitch = 1.1, delay = 0}, {mult = 0, chips = 0, handname = '', level = ''})
+
+	else
+		original_level_up_hand(card, hand, instant, amount)
+	end
+
+end
