@@ -577,6 +577,40 @@ SMODS.Joker {
 }
 
 -- Mouse Hole
+
+local function get_smallest_id_if_multiple_ids(scoring_hand)
+	local cards = scoring_hand
+
+	if #cards < 2 then
+		return nil
+	end
+
+	local id_set = {}
+	for _, card in ipairs(cards) do
+		if card.ability.effect ~= 'Stone Card' then
+			id_set[card:get_id()] = true
+		end
+	end
+
+	local unique_ids_list = {}
+	for id in pairs(id_set) do
+		table.insert(unique_ids_list, id)
+	end
+
+	if #unique_ids_list < 2 then
+		return nil
+	end
+
+	local min_id = unique_ids_list[1]
+	for i = 2, #unique_ids_list do
+		if unique_ids_list[i] < min_id then
+			min_id = unique_ids_list[i]
+		end
+	end
+
+	return min_id
+end
+
 SMODS.Joker {
 	key = 'mousehole',
 	loc_txt = {
@@ -620,39 +654,6 @@ SMODS.Joker {
 
 	end
 }
-
-local function get_smallest_id_if_multiple_ids(scoring_hand)
-	local cards = scoring_hand
-
-	if #cards < 2 then
-		return nil
-	end
-
-	local id_set = {}
-	for _, card in ipairs(cards) do
-		if card.ability.effect ~= 'Stone Card' then
-			id_set[card:get_id()] = true
-		end
-	end
-
-	local unique_ids_list = {}
-	for id in pairs(id_set) do
-		table.insert(unique_ids_list, id)
-	end
-
-	if #unique_ids_list < 2 then
-		return nil
-	end
-
-	local min_id = unique_ids_list[1]
-	for i = 2, #unique_ids_list do
-		if unique_ids_list[i] < min_id then
-			min_id = unique_ids_list[i]
-		end
-	end
-
-	return min_id
-end
 
 -- Acceleration
 SMODS.Joker {
