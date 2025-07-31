@@ -15,14 +15,12 @@ SMODS.Joker {
 	loc_txt = {
 		name = 'Golden Eye',
 		text = {
-			"This Joker gains {X:mult,C:white}X#2#{} Mult",
-			"every time {C:money}${}",
-			"is obtained during the round,",
-			"resets at the end of the round",
-			"{C:inactive}(Currently {X:mult,C:white}X#1#{}{C:inactive} Mult)"
+			"{X:mult,C:white}X#1#{} Mult every",
+			"time {C:money}${} is obtained",
+			"during the hand played"
 		}
 	},
-	config = { extra = { xmult_bonus = 0.25, prevDollars = 0, pending_bonus = 0, hook = false }, x_mult = 1 },
+	config = { extra = { xmult_bonus = 1.5 } },
 	rarity = 2,
 	atlas = 'BalapoJokers',
 	pos = { x = 1, y = 0 },
@@ -32,35 +30,14 @@ SMODS.Joker {
 	discovered = true,
 	blueprint_compat = true,
 	loc_vars = function(self, info_queue, card)
-		return { vars = { card.ability.x_mult, card.ability.extra.xmult_bonus } }
-	end,
-	update = function(self, card, dt)
-		updateState()
+		return { vars = { card.ability.extra.xmult_bonus } }
 	end,
 	calculate = function(self, card, context)
-
-		-- Reset end of round
-		if context.end_of_round and not context.blueprint and card.ability.x_mult > 1 then
-			card.ability.x_mult = 1
-			--sendDebugMessage("Golden Eye reset")
+		if G.STATE == G.STATES.HAND_PLAYED and context.dollar_gain then
 			return {
-				message = localize('k_reset'),
-                colour = G.C.RED,
-				card = card
-            }
+				x_mult = card.ability.extra.xmult_bonus
+			}
 		end
-
-		-- Global xmult bonus
-		if context.joker_main then
-			--sendDebugMessage("Golden Eye final xmult: " .. tostring(card.ability.x_mult))
-			if card.ability.x_mult > 1 then
-				return {
-					Xmult_mod = card.ability.x_mult,
-					message = localize { type = 'variable', key = 'a_xmult', vars = { card.ability.x_mult } }
-				}
-			end
-		end
-
 	end
 }
 
@@ -72,42 +49,18 @@ function ease_dollars(dollars)
 
 	original_ease_dollars(dollars)
 
-	if active == false then
-		return
-	end
-
 	if (dollars or 0) > 0 then
-
-		-- increment jokers bonus
 		for i=1, #G.jokers.cards do
 			local joker = G.jokers.cards[i];
-			if joker.ability.name == 'j_balapo_goldeneye' then
-	        	joker.ability.x_mult = joker.ability.x_mult + joker.ability.extra.xmult_bonus
-				card_eval_status_text(joker, 'extra', nil, nil, nil, {message = localize('k_upgrade_ex'), colour = G.C.MULT, delay = 0.75, card = joker})
+			local name = joker.ability.name
+			if (name == 'j_balapo_goldeneye' or name == "Blueprint" or name == "Brainstorm") and not joker.debuff then
+				context = { dollar_gain = true }
+				local effects = { eval_card(joker, context) }
+				if next(effects) then
+					SMODS.trigger_effects(effects, joker)
+				end
 			end
 	    end
-
-	end
-
-end
-
--- create empty table
-local current_jokers = {}
-
-active = false
-
--- watch state to definie activation condition
-function updateState()
-
-	if G.STATE == G.STATES.DRAW_TO_HAND or
-	G.STATE == G.STATES.SELECTING_HAND then
-		active = true
-	end
-
-	if G.STATE == G.STATES.NEW_ROUND or
-	G.STATE == G.STATES.ROUND_EVAL or
-	G.STATE == G.STATES.SHOP then
-		active = false
 	end
 
 end
