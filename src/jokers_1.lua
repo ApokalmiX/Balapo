@@ -49,7 +49,7 @@ function ease_dollars(dollars)
 
 	original_ease_dollars(dollars)
 
-	if (dollars or 0) > 0 then
+	if type(dollars) == "number" and dollars > 0 then
 		for i=1, #G.jokers.cards do
 			local joker = G.jokers.cards[i];
 			local name = joker.ability.name
