@@ -80,6 +80,12 @@ SMODS.Joker {
 	config = { },
 	rarity = 3,
 	atlas = 'BalapoJokers',
+	loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue+1] = G.P_CENTERS.e_foil
+        info_queue[#info_queue+1] = G.P_CENTERS.e_holo
+        info_queue[#info_queue+1] = G.P_CENTERS.e_polychrome
+		return { vars = {} }
+    end,
 	pos = { x = 0, y = 1 },
 	cost = 10,
 	unlocked = true,
@@ -336,6 +342,7 @@ SMODS.Joker {
 	pos = { x = 0, y = 0 },
 	cost = 7,
 	loc_vars = function(self, info_queue, card)
+		info_queue[#info_queue+1] = {key = 'c_aura', set = 'Spectral'}
 		return { vars = { card.ability.extra.ace_played } }
 	end,
 	unlocked = true,
@@ -409,6 +416,7 @@ SMODS.Joker {
 	pos = { x = 2, y = 1 },
 	cost = 10,
 	loc_vars = function(self, info_queue, card)
+		info_queue[#info_queue+1] = G.P_CENTERS.e_negative
 		return { vars = { card.ability.extra.negative_joker_sold } }
 	end,
 	unlocked = true,
@@ -502,6 +510,10 @@ SMODS.Joker {
 	config = { },
 	rarity = 3,
 	atlas = 'BalapoJokers',
+	loc_vars = function(self, info_queue, card)
+		info_queue[#info_queue+1] = {key = 'eternal', set = 'Other'}
+		return { vars = {} }
+    end,
 	pos = { x = 3, y = 1 },
 	cost = 10,
 	unlocked = true,
@@ -569,7 +581,7 @@ SMODS.Joker {
 	loc_txt = {
 		name = 'Mouse Hole',
 		text = {
-			"Lowest-ranked card",
+			"{C:attention}Lowest{} ranked cards",
 			"of the played hand",
 			"give {X:mult,C:white} X#1# {} Mult when scored",
 			"{C:inactive}(Requires at least two different rank cards)"
@@ -736,6 +748,7 @@ SMODS.Joker {
 	discovered = true,
 	blueprint_compat = true,
 	loc_vars = function(self, info_queue, card)
+		info_queue[#info_queue+1] = G.P_SEALS.Red
 		return { vars = { card.ability.extra.charges } }
 	end,
 	calculate = function(self, card, context)
@@ -799,6 +812,7 @@ SMODS.Joker {
 		}
 	},
 	loc_vars = function(self, info_queue, card)
+		info_queue[#info_queue+1] = G.P_SEALS.Blue
 		return { vars = { card.ability.extra.x_mult } }
 	end,
 	config = { extra = { x_mult = 0.02 } },
@@ -855,6 +869,7 @@ SMODS.Joker {
 		}
 	},
 	loc_vars = function(self, info_queue, card)
+		info_queue[#info_queue+1] = G.P_SEALS.Gold
 		return { vars = { card.ability.extra.dollars } }
 	end,
 	config = { extra = { dollars = 3 } },
@@ -942,6 +957,7 @@ SMODS.Joker {
 	discovered = true,
 	blueprint_compat = false,
 	loc_vars = function(self, info_queue, card)
+		info_queue[#info_queue+1] = G.P_SEALS.Purple
 		return { vars = { G.GAME and G.GAME.probabilities.normal or 1, card.ability.extra.odds } }
 	end,
 	calculate = function(self, card, context)
@@ -1023,10 +1039,10 @@ function level_up_hand(card, hand, instant, amount)
 	amount = amount or 1
 
 	if card and
-	card.ability and
-	card.ability.consumeable and
-	card.ability.consumeable.hand_type and
-	next(SMODS.find_card("j_balapo_stellium")) then
+		card.ability and
+		card.ability.consumeable and
+		card.ability.consumeable.hand_type and
+		next(SMODS.find_card("j_balapo_stellium")) then
 
 		local weakest_level = nil
 
