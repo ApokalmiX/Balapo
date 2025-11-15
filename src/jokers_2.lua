@@ -505,9 +505,9 @@ end
 
 -- WIP
 SMODS.Joker {
-	key = 'test2',
+	key = 'call_of_the_soul',
 	loc_txt = {
-		name = 'Test',
+		name = 'The Call of the Soul',
 		text = {
 			"Create a {C:spectral}The Soul{} card",
 			"after {C:attention}Finisher Blind{} is defeated",
@@ -517,7 +517,7 @@ SMODS.Joker {
 	config = { extra = { } },
 	rarity = 3,
 	atlas = 'BalapoJokers',
-	pos = { x = 1, y = 1 },
+	pos = { x = 4, y = 3 },
 	cost = 10,
 	loc_vars = function(self, info_queue, card)
 		info_queue[#info_queue+1] = {key = 'c_soul', set = 'Spectral'}
