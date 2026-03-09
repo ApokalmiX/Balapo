@@ -1,3 +1,80 @@
+--
+-- Metadata
+--
+
+SMODS.Joker {
+	key = 'metadata',
+	loc_txt = {
+		name = 'Metadata',
+		text = {
+			"Create a random {C:attention}Tag{}",
+			"at the end of the {C:attention}shop{}"
+		}
+	},
+	config = { },
+	rarity = 3,
+	atlas = 'BalapoJokers',
+	pos = { x = 1, y = 1 },
+	cost = 10,
+	unlocked = true,
+	discovered = true,
+	blueprint_compat = false,
+	calculate = function(self, card, context)
+
+		if context.ending_shop then
+
+			return {
+				func = function()
+					G.E_MANAGER:add_event(Event({
+						func = (function()
+
+							G.E_MANAGER:add_event(Event({
+								func = function()
+
+									local keys = {}
+									for key, _ in pairs(G.P_TAGS) do
+									    table.insert(keys, key)
+									end
+
+									local tag_key = pseudorandom_element(keys, pseudoseed('metadata'))
+									sendDebugMessage('TagName:' .. tag_key)
+
+									if tag_key == 'tag_orbital' then
+
+										local _poker_hands = {}
+    									for k, v in pairs(G.GAME.hands) do
+        									if v.visible then _poker_hands[#_poker_hands+1] = k end
+    									end
+
+										G.orbital_hand = pseudorandom_element(_poker_hands, pseudoseed('orbital'))
+									end
+
+									local tag = Tag(tag_key, false, 'Big')
+									add_tag(tag)
+
+									G.orbital_hand = nil
+
+                            		play_sound('generic1', 0.9 + math.random() * 0.1, 0.8)
+                            		play_sound('holo1', 1.2 + math.random() * 0.1, 0.4)
+
+                                    return true
+                                end
+                            }))
+
+                            SMODS.calculate_effect({ message = 'Tagged', colour = G.C.PURPLE },
+                                context.blueprint_card or card)
+                            return true
+
+                        end)
+                    }))
+                end
+            }
+
+        end
+
+	end
+}
+
 -- The Conductor
 SMODS.Joker {
 	key = 'the_conductor',
@@ -193,6 +270,32 @@ local function isBefore(currentJoker, relativeJoker)
 	end
 	return false
 end
+
+-- WIP
+SMODS.Joker {
+	key = 'test',
+	loc_txt = {
+		name = 'Test',
+		text = {
+			"Only {C:attention}Jokers{} can",
+			"appear int the {C:attention}Shop{}"
+		}
+	},
+	config = { extra = { } },
+	rarity = 3,
+	atlas = 'BalapoJokers',
+	pos = { x = 1, y = 1 },
+	cost = 10,
+	unlocked = true,
+	discovered = true,
+	blueprint_compat = true,
+	add_to_deck = function(self, card, from_debuff)
+		G.GAME.joker_rate = 100
+	end,
+	remove_from_deck = function(self, card, from_debuff)
+		G.GAME.joker_rate = 20
+	end,
+}
 
 -- Chips Joker
 SMODS.Joker {
@@ -400,7 +503,7 @@ function get_blind(name)
     return nil
 end
 
--- Call of the Soul
+-- WIP
 SMODS.Joker {
 	key = 'call_of_the_soul',
 	loc_txt = {
@@ -459,50 +562,5 @@ SMODS.Joker {
 				}
 			end
 		end
-	end
-}
-
-local function find_legendaries()
-    local results = {}
-    if not G.jokers or not G.jokers.cards then return {} end
-    for _, area in ipairs(SMODS.get_card_areas('jokers')) do
-        if area.cards then
-            for _, v in pairs(area.cards) do
-                if v and type(v) == 'table' and v.config.center.rarity == 4 and v.config.center.key ~= 'j_balapo_mathurine' and not v.debuff then
-                    table.insert(results, v)
-                end
-            end
-        end
-    end
-    return results
-end
-
--- Mathurine
-SMODS.Joker {
-	key = 'mathurine',
-	loc_txt = {
-		name = 'Mathurine',
-		text = {
-			"Copies ability of",
-			"all your {C:attention}Legendary{} {C:attention}Jokers{}",
-			"{C:inactive}(If compatible)"
-		}
-	},
-	config = { extra = { } },
-	rarity = 4,
-	atlas = 'BalapoJokers',
-	pos = { x = 0, y = 4 },
-	soul_pos = { x = 1, y = 4 },
-	cost = 20,
-	unlocked = true,
-	discovered = true,
-	blueprint_compat = true,
-	calculate = function(self, card, context)
-		local legendaries = find_legendaries()
-		local effects = {}
-        for i = 1, #legendaries do
-        	effects[#effects+1] = SMODS.blueprint_effect(card, legendaries[i], context)
-        end
-        if next(effects) then return SMODS.merge_effects(effects) end
 	end
 }
