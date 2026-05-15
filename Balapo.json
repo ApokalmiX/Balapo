@@ -12,6 +12,6 @@
     "version": "1.2.0",
     "dependencies": [
         "Steamodded (>=1.*)",
-        "Lovely (>=0.6)",
-    ],
+        "Lovely (>=0.6)"
+    ]
 }
