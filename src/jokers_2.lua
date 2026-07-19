@@ -38,19 +38,50 @@ SMODS.Joker {
 	end
 }
 
+local function isBefore(currentJoker, relativeJoker)
+	for i, joker in ipairs(G.jokers.cards) do
+		if joker == currentJoker then
+			return true
+		elseif joker == relativeJoker then
+			return false
+		end
+	end
+	return false
+end
+
+local function count_active_rare_jokers()
+	local rare_jokers = 0
+	if not G.jokers or not G.jokers.cards then
+		return rare_jokers
+	end
+
+	for _, joker in ipairs(G.jokers.cards) do
+		if joker and
+		not joker.debuff and
+		joker.config and
+		joker.config.center and
+		joker.config.center.rarity == 3 then
+			rare_jokers = rare_jokers + 1
+		end
+	end
+
+	return rare_jokers
+end
+
 -- Inception
 SMODS.Joker {
 	key = 'inception',
 	loc_txt = {
 		name = 'Inception',
 		text = {
-			"Played cards apply",
-			"the {X:mult,C:white} Xmult {} of",
-			"the {C:attention}Joker{} to the right",
-			"every {C:attention}3{} triggers"
+			"This Joker gives {X:mult,C:white}X1{} Mult",
+			"for each {C:red}Rare{} Joker",
+			"on every {C:attention}3rd{} trigger",
+			"of the same played card",
+			"{C:inactive}(Currently {X:mult,C:white}X#1#{}{C:inactive} Mult)"
 		}
 	},
-	config = { extra = { current_mult = 0 } },
+	config = { extra = { rare_jokers = 0 } },
 	rarity = 3,
 	atlas = 'BalapoJokers',
 	pos = { x = 0, y = 2 },
@@ -58,9 +89,12 @@ SMODS.Joker {
 	unlocked = true,
 	discovered = true,
 	blueprint_compat = true,
+	loc_vars = function(self, info_queue, card)
+		card.ability.extra.rare_jokers = count_active_rare_jokers()
+		return { vars = { card.ability.extra.rare_jokers } }
+	end,
 	calculate = function(self, card, context)
 
-		-- Reset triggers table and get joker to copy
 		if context.before and not context.blueprint then
 
 			-- Reset trigger count for played cards
@@ -78,7 +112,7 @@ SMODS.Joker {
 
 			if not context.blueprint then
 
-				-- trigger count calculation
+				-- Trigger count calculation
 				if context.other_card.inception_trigger == nil then
 					context.other_card.inception_trigger = 0
 				end
@@ -98,7 +132,7 @@ SMODS.Joker {
 
 			if context.blueprint then
 				if isBefore(context.blueprint_card, card) then
-					-- the trigger count is not incremented yet
+					-- The trigger count is not incremented yet
 					applyMult = context.other_card.inception_trigger == 2
 				else
 					applyMult = context.other_card.inception_trigger == 3
@@ -108,91 +142,18 @@ SMODS.Joker {
 			end
 
 			if applyMult then
-
-				-- right joker calculation
-				local right_joker = nil
-				for i = 1, #G.jokers.cards do
-					if G.jokers.cards[i] == card then
-						right_joker = G.jokers.cards[i+1]
-					end
-				end
-				if right_joker == nil then
-					return
-				end
-
-				-- Mult update (realtime)
-				card.ability.extra.current_mult = 1
-				if right_joker ~= card then
-
-					-- This way of doing things is not very clean but there is no
-					-- unique way to detect the xmult of a joker, so we handle all
-					-- the special cases manually.
-
-					if right_joker.ability.name == 'Steel Joker' then
-						-- Specific case for Stone Joker (Realtime xmult calculation)
-						card.ability.extra.current_mult = 1 + right_joker.ability.extra*right_joker.ability.steel_tally
-
-					elseif
-					right_joker.ability.name == 'Baseball Card' or
-					right_joker.ability.name == 'Acrobat' or
-					right_joker.ability.name == 'Flower Pot' or
-					right_joker.ability.name == 'Seeing Double' or
-					right_joker.ability.name == "Driver's License" or
-					right_joker.ability.name == "Blackboard" then
-						card.ability.extra.current_mult = right_joker.ability.extra
-
-					elseif right_joker.ability.name == 'Caino' then
-						card.ability.extra.current_mult = right_joker.ability.caino_xmult
-
-					elseif right_joker.ability.name == "Lucky Cat" then
-						card.ability.extra.current_mult = right_joker.ability.x_mult
-
-					elseif right_joker.ability.x_mult > 1 then
-						-- Normal xMult case
-						card.ability.extra.current_mult = right_joker.ability.x_mult
-
-					elseif type(right_joker.ability.extra) == "table" then
-
-						if right_joker.ability.extra.x_mult and right_joker.ability.extra.x_mult > 1 then
-							-- Specific case for custom jokers
-							card.ability.extra.current_mult = right_joker.ability.extra.x_mult
-
-						elseif right_joker.ability.extra.Xmult and right_joker.ability.extra.Xmult > 1 then
-							-- Specific case for Loyalty Card, Cavendish and Card Sharp
-							card.ability.extra.current_mult = right_joker.ability.extra.Xmult
-						end
-					end
-
-					-- Prevent nil attribution
-					if card.ability.extra.current_mult == nil then
-						card.ability.extra.current_mult = 1
-					end
-
-				end
-
-				if card.ability.extra.current_mult > 1 then
+				card.ability.extra.rare_jokers = count_active_rare_jokers()
+				if card.ability.extra.rare_jokers > 1 then
 					return {
-						x_mult = card.ability.extra.current_mult,
+						x_mult = card.ability.extra.rare_jokers,
 						card = card
 					}
 				end
-
 			end
 
 		end
 	end
 }
-
-local function isBefore(currentJoker, relativeJoker)
-	for i, joker in ipairs(G.jokers.cards) do
-		if joker == currentJoker then
-			return true
-		elseif joker == relativeJoker then
-			return false
-		end
-	end
-	return false
-end
 
 -- Chips Joker
 SMODS.Joker {
