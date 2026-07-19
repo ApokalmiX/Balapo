@@ -68,6 +68,35 @@ local function count_active_rare_jokers()
 	return rare_jokers
 end
 
+local function count_card_suits(card)
+	local suits = { 'Hearts', 'Diamonds', 'Spades', 'Clubs' }
+	local suit_count = 0
+
+	for _, suit in ipairs(suits) do
+		if card:is_suit(suit, nil, true) then
+			suit_count = suit_count + 1
+		end
+	end
+
+	return suit_count
+end
+
+local function get_poker_hand_chips(hand_name)
+	if G.GAME and G.GAME.hands and hand_name and G.GAME.hands[hand_name] then
+		return G.GAME.hands[hand_name].chips or 0
+	end
+
+	return 0
+end
+
+local function get_poker_hand_mult(hand_name)
+	if G.GAME and G.GAME.hands and hand_name and G.GAME.hands[hand_name] then
+		return G.GAME.hands[hand_name].mult or 0
+	end
+
+	return 0
+end
+
 -- Inception
 SMODS.Joker {
 	key = 'inception',
@@ -155,23 +184,58 @@ SMODS.Joker {
 	end
 }
 
+-- Colorblind Joker
+SMODS.Joker {
+	key = 'colorblind_joker',
+	loc_txt = {
+		name = 'Colorblind Joker',
+		text = {
+			"Played cards counted",
+			"as at least {C:attention}2{} suits",
+			"give {X:mult,C:white}X#1#{} Mult",
+			"when scored"
+		}
+	},
+	config = { extra = { x_mult = 2 } },
+	rarity = 3,
+	atlas = 'BalapoJokers',
+	pos = { x = 1, y = 1 },
+	cost = 10,
+	unlocked = true,
+	discovered = true,
+	blueprint_compat = true,
+	loc_vars = function(self, info_queue, card)
+		return { vars = { card.ability.extra.x_mult } }
+	end,
+	calculate = function(self, card, context)
+		if context.individual and
+		context.cardarea == G.play and
+		context.other_card and
+		count_card_suits(context.other_card) >= 2 then
+			return {
+				x_mult = card.ability.extra.x_mult,
+				card = card
+			}
+		end
+	end
+}
+
 -- Chips Joker
 SMODS.Joker {
 	key = 'bonus_joker',
 	loc_txt = {
 		name = 'Bonus Joker',
 		text = {
-			"Played {C:attention}Bonus{} cards give",
-			"{C:chips}+#2#{} Chips when scored,",
-			"increase by {C:chips}+#1#{} Chips",
-			"each time it triggers",
+			"Played {C:attention}Bonus Cards{} give",
+			"the {C:chips}Chips{} of the played",
+			"{C:attention}poker hand{} when scored"
 		}
 	},
 	loc_vars = function(self, info_queue, card)
 		info_queue[#info_queue+1] = G.P_CENTERS.m_bonus
-		return { vars = { card.ability.extra.chips_bonus, card.ability.extra.extra_chips } }
+		return { vars = { } }
 	end,
-	config = { extra = { chips_bonus = 5, extra_chips = 0 } },
+	config = { extra = { } },
 	rarity = 2,
 	atlas = 'BalapoJokers',
 	pos = { x = 1, y = 3 },
@@ -182,18 +246,10 @@ SMODS.Joker {
 	calculate = function(self, card, context)
         if context.individual and context.cardarea == G.play and
             SMODS.has_enhancement(context.other_card, 'm_bonus') then
-            local current_bonus =  card.ability.extra.extra_chips
-			if not context.blueprint then
-				card.ability.extra.extra_chips = card.ability.extra.extra_chips + card.ability.extra.chips_bonus
+            local hand_chips = get_poker_hand_chips(context.scoring_name)
+			if hand_chips > 0 then
 				return {
-					message = localize('k_upgrade_ex'),
-                	colour = G.C.CHIPS,
-                	message_card = card,
-					chips = current_bonus
-            	}
-			elseif current_bonus > 0 then
-				return {
-                	chips = current_bonus
+                	chips = hand_chips
             	}
 			end
         end
@@ -214,17 +270,16 @@ SMODS.Joker {
 	loc_txt = {
 		name = 'Mult Joker',
 		text = {
-			"Played {C:attention}Mult{} cards give",
-			"{C:mult}+#2#{} Mult when scored,",
-			"increase by {C:mult}+#1#{} Mult",
-			"each time it triggers",
+			"Played {C:attention}Mult Cards{} give",
+			"the {C:mult}Mult{} of the played",
+			"{C:attention}poker hand{} when scored"
 		}
 	},
 	loc_vars = function(self, info_queue, card)
 		info_queue[#info_queue+1] = G.P_CENTERS.m_mult
-		return { vars = { card.ability.extra.mult_bonus, card.ability.extra.extra_mult } }
+		return { vars = { } }
 	end,
-	config = { extra = { mult_bonus = 1, extra_mult = 0 } },
+	config = { extra = { } },
 	rarity = 2,
 	atlas = 'BalapoJokers',
 	pos = { x = 2, y = 3 },
@@ -235,18 +290,10 @@ SMODS.Joker {
 	calculate = function(self, card, context)
         if context.individual and context.cardarea == G.play and
             SMODS.has_enhancement(context.other_card, 'm_mult') then
-            local current_bonus =  card.ability.extra.extra_mult
-			if not context.blueprint then
-				card.ability.extra.extra_mult = card.ability.extra.extra_mult + card.ability.extra.mult_bonus
+            local hand_mult = get_poker_hand_mult(context.scoring_name)
+			if hand_mult > 0 then
 				return {
-					message = localize('k_upgrade_ex'),
-                	colour = G.C.MULT,
-                	message_card = card,
-                	mult = current_bonus
-            	}
-			elseif current_bonus > 0 then
-				return {
-                	mult = current_bonus
+                	mult = hand_mult
             	}
 			end
         end
