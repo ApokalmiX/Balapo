@@ -9,9 +9,9 @@
     "priority": 0,
     "badge_colour": "395054",
     "badge_text_colour": "fda200",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "dependencies": [
-        "Steamodded (>=1.*)",
-        "Lovely (>=0.6)",
+        "Steamodded (>=1.0.0~BETA-1503a)",
+        "Lovely (>=0.6)"
     ],
 }
