@@ -9,6 +9,8 @@ SMODS.Atlas {
 	py = 95
 }
 
+local WHEEL_BIAS_NEGATIVE_ODDS = 10
+
 SMODS.Voucher {
 	key = "wheel_check",
 	loc_txt = {
@@ -46,14 +48,16 @@ SMODS.Voucher {
 	loc_txt = {
 		name = 'Wheel Bias',
 		text = {
-			"{C:attention}The Wheel of Fortune{}",
-			"may apply {C:dark_edition}Negative{} edition"
+			"When {C:attention}The Wheel of Fortune{}",
+			"applies its effect, it also has",
+			"a {C:green}#1# in #2#{} chance to",
+			"apply {C:dark_edition}Negative{} edition"
 		}
 	},
 	loc_vars = function(self, info_queue, card)
 		info_queue[#info_queue+1] = {key = 'c_wheel_of_fortune', set = 'Tarot'}
         info_queue[#info_queue+1] = G.P_CENTERS.e_negative
-		return { vars = {} }
+		return { vars = { 1, WHEEL_BIAS_NEGATIVE_ODDS } }
     end,
 	atlas = 'BalapoVouchers',
 	pos = { x = 0, y = 1 },
@@ -83,7 +87,7 @@ function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 		if G.GAME.balapo_wheel_bias then
 			_no_neg = false
 			local edition_poll = pseudorandom(pseudoseed(_key))
-			if edition_poll > 1 - 0.003*50 and not _no_neg then
+			if edition_poll > 1 - 1 / WHEEL_BIAS_NEGATIVE_ODDS and not _no_neg then
 				return {negative = true}
 			end
 		end
