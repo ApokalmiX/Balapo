@@ -15,8 +15,7 @@ SMODS.Voucher {
 		name = 'Wheel Check',
 		text = {
 			"{C:attention}The Wheel of Fortune{}",
-			"have a {C:attention}X3{} higher",
-			"chance of applying the",
+			"only applies the",
 			"{C:dark_edition}Polychrome{} edition"
 		}
 	},
@@ -32,10 +31,10 @@ SMODS.Voucher {
 	unlocked = true,
 	discovered = true,
 	redeem = function(self, card)
-		G.GAME.balapo_wheel_check = 3
+		G.GAME.balapo_wheel_check = true
 	end,
 	unredeem = function(self, card)
-		G.GAME.balapo_wheel_check = 1
+		G.GAME.balapo_wheel_check = false
 	end,
 	in_pool = function(self, args)
 		return true
@@ -79,19 +78,16 @@ SMODS.Voucher {
 
 local original_poll_edition = poll_edition
 
-function poll_edition(_key, _mod, _no_neg, _guaranteed)
+function poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 	if _key == 'wheel_of_fortune' and G.GAME.balapo_wheel_check then
 		if G.GAME.balapo_wheel_bias then
 			_no_neg = false
+			local edition_poll = pseudorandom(pseudoseed(_key))
+			if edition_poll > 1 - 0.003*50 and not _no_neg then
+				return {negative = true}
+			end
 		end
-		local edition_poll = pseudorandom(pseudoseed(_key))
-		if edition_poll > 1 - 0.003*50 and not _no_neg then
-            return {negative = true}
-        elseif edition_poll > 1 - 0.006*75 then
-            return {polychrome = true}
-        else
-            return {holo = true}
-		end
+		return {polychrome = true}
 	end
-	return original_poll_edition(_key, _mod, _no_neg, _guaranteed)
+	return original_poll_edition(_key, _mod, _no_neg, _guaranteed, _options)
 end
