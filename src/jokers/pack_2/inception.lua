@@ -28,6 +28,11 @@ local function count_active_rare_jokers()
 	return rare_jokers
 end
 
+local function get_inception_triggers(playing_card)
+	playing_card.balapo_inception_triggers = playing_card.balapo_inception_triggers or {}
+	return playing_card.balapo_inception_triggers
+end
+
 -- Inception
 SMODS.Joker {
 	key = 'inception',
@@ -59,7 +64,7 @@ SMODS.Joker {
 
 			-- Reset trigger count for played cards
 			for i, playing_card in ipairs(context.full_hand) do
-				playing_card.inception_trigger = nil
+				playing_card.balapo_inception_triggers = nil
 			end
 
 		end
@@ -70,21 +75,20 @@ SMODS.Joker {
 				return
 			end
 
+			local inception_triggers = get_inception_triggers(context.other_card)
+			local trigger_count = inception_triggers[card] or 0
+
 			if not context.blueprint then
 
-				-- Trigger count calculation
-				if context.other_card.inception_trigger == nil then
-					context.other_card.inception_trigger = 0
+				-- Trigger count calculation for this Inception copy only
+				trigger_count = trigger_count + 1
+				if trigger_count == 4 then
+					trigger_count = 1
 				end
-
-				context.other_card.inception_trigger = context.other_card.inception_trigger + 1
-				if context.other_card.inception_trigger == 4 then
-					context.other_card.inception_trigger = 1
-				end
-
+				inception_triggers[card] = trigger_count
 			end
 
-			if not context.other_card.inception_trigger then
+			if trigger_count == 0 then
 				return
 			end
 
@@ -93,12 +97,12 @@ SMODS.Joker {
 			if context.blueprint then
 				if isBefore(context.blueprint_card, card) then
 					-- The trigger count is not incremented yet
-					applyMult = context.other_card.inception_trigger == 2
+					applyMult = trigger_count == 2
 				else
-					applyMult = context.other_card.inception_trigger == 3
+					applyMult = trigger_count == 3
 				end
 			else
-				applyMult = context.other_card.inception_trigger == 3
+				applyMult = trigger_count == 3
 			end
 
 			if applyMult then
