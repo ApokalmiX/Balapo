@@ -23,12 +23,14 @@ SMODS.current_mod.config_tab = function()
       }
 end
 
+SMODS.load_file("src/jokers/atlas.lua")()
+
 if config.joker_pack_1 then
-    SMODS.load_file("src/jokers_1.lua")()
+    SMODS.load_file("src/jokers/pack_1.lua")()
 end
 
 if config.joker_pack_2 then
-    SMODS.load_file("src/jokers_2.lua")()
+    SMODS.load_file("src/jokers/pack_2.lua")()
 end
 
 SMODS.load_file("src/vouchers.lua")()
