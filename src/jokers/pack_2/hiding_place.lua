@@ -28,6 +28,10 @@ local function hiding_place_restore_joker(saved_card, silent)
 	return restored_joker
 end
 
+local function hiding_place_saved_joker_is_negative(saved_card)
+	return saved_card and saved_card.edition and saved_card.edition.negative
+end
+
 -- Hiding place
 SMODS.Joker {
 	key = 'hiding_place',
@@ -98,10 +102,22 @@ SMODS.Joker {
 				return
 			end
 
-			local available_slots = math.max(0, G.jokers.config.card_limit - (#G.jokers.cards - 1 + (G.GAME.joker_buffer or 0)))
+			local card_limit_after_sale = G.jokers.config.card_limit - ((card.edition and card.edition.negative) and 1 or 0)
+			local available_slots = math.max(0, card_limit_after_sale - (#G.jokers.cards - 1 + (G.GAME.joker_buffer or 0)))
+			local jokers_to_restore = {}
 
-			for i = 1, math.min(available_slots, #captured_jokers) do
+			for i = 1, #captured_jokers do
 				local saved_card = captured_jokers[i]
+				if hiding_place_saved_joker_is_negative(saved_card) then
+					jokers_to_restore[#jokers_to_restore + 1] = saved_card
+				elseif available_slots > 0 then
+					jokers_to_restore[#jokers_to_restore + 1] = saved_card
+					available_slots = available_slots - 1
+				end
+			end
+
+			for i = 1, #jokers_to_restore do
+				local saved_card = jokers_to_restore[i]
 				local restore_delay = 0.15 * (i - 1)
 				local silent = i > 1
 				G.E_MANAGER:add_event(Event({
@@ -114,9 +130,9 @@ SMODS.Joker {
 				}))
 			end
 
-			if available_slots > 0 then
+			if #jokers_to_restore > 0 then
 				card_eval_status_text(card, 'extra', nil, nil, nil, {
-					message = '+'..math.min(available_slots, #captured_jokers)..' Jokers',
+					message = '+'..#jokers_to_restore..' Jokers',
 					colour = G.C.FILTER
 				})
 			else
