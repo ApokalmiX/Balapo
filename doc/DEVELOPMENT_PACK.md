@@ -8,7 +8,7 @@ Pack 3 is reserved for experimental Jokers that are still being developed or pla
 - Enable **Jokers pack 3 - Development (restart required)** in the mod configuration to load it.
 - Restart the game after changing the option.
 - Packs 1 and 2 can be enabled or disabled independently of this pack.
-- The pack currently contains Curated Shop.
+- The pack currently contains Curated Shop and Encore.
 
 ## Adding a Joker
 
@@ -22,3 +22,7 @@ Pack 3 is reserved for experimental Jokers that are still being developed or pla
 ## First Planned Joker
 
 [Curated Shop](joker_ideas/curated_shop.md) is implemented in this pack and awaits in-game playtesting.
+
+## Additional Implemented Joker
+
+[Encore](joker_ideas/last_hand_first.md) makes the last available hand also count as the first for Joker abilities. It is implemented; the user reported that an initial in-game trial appears to work correctly.
