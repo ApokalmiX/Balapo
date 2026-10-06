@@ -50,7 +50,7 @@ These gameplay rules are confirmed by the user. All other choices below are prop
 - **Confirmed duplicate behavior:** No additional effect; one remaining non-debuffed copy maintains the restriction.
 - **Confirmed Blueprint and Brainstorm compatibility:** Incompatible; copying this binary restriction provides no additional benefit.
 - **Confirmed initial rarity and cost:** Uncommon at $6, as a starting point for playtesting. Revisit after observing how much it improves Joker searches.
-- **Pack:** Undecided.
+- **Pack:** Pack 3 (Development), enabled by default. The Joker is implemented and awaits in-game playtesting.
 
 ## Proposed Description
 
@@ -60,21 +60,22 @@ The description applies to newly generated individual shop offers. Existing card
 
 ## Implementation Notes
 
-- Register a unique `SMODS.Joker` key and load its file through the chosen pack.
-- Use `BalapoJokers` at position `(1, 1)` unless another asset is requested.
-- The local Steamodded source generates normal shop cards through `SMODS.create_shop_card` and selects their type through `SMODS.poll_object_type` in `reference/Steamodded/src/utils/weights.lua`.
-- That selection reads type weights from the run state. The base-game source also contains Tarot, Planet, and playing-card shop rates.
-- Investigate a shop-specific filtering approach for the installed Steamodded version. Avoid assuming that a global type-selection change affects only the shop.
-- Preserve other effects that change shop rates, including vouchers. Selling or debuffing the Joker must not restore stale values or overwrite changes made while it was owned.
-- Account for multiple copies, loading a saved run, and changes to ownership or debuff state.
-- Normal shop generation has tutorial and tag overrides before type selection in the inspected Steamodded source. Filtering normal type weights alone is therefore insufficient to enforce the confirmed restriction on forced offers. Investigate these generation paths and relevant mod interactions before choosing the implementation.
-- Replace prohibited forced offers with eligible offers, preserving the number of shop cards. Consume a triggering tag normally when generating the replacement. The replacement selection method and handling of other mod effects remain implementation questions.
-- Define a fallback if no eligible type has a positive weight.
-- No Lua implementation has been requested or created for this idea.
+- Implemented in `src/jokers/pack_3/curated_shop.lua`, loaded by Pack 3.
+- Registered as `j_balapo_curated_shop`, with the `BalapoJokers` atlas at position `(1, 1)`.
+- A `create_card` wrapper redirects prohibited individual shop creations to eligible types before construction. Other card areas, including booster contents, are unaffected.
+- A `create_card_for_shop` wrapper also handles directly constructed prohibited offers, including tutorial overrides, by converting the returned card in place. This preserves references held by queued tag and shop UI events.
+- Both wrappers delegate to the previously installed functions. Third-party overrides loaded later or asynchronous changes to already generated cards require compatibility playtesting.
+- Replacement types use the existing relative weights of Jokers and allowed registered consumable types. Spectral cards require an existing positive shop rate to be selected as replacements.
+- No shop rates are changed. Ownership and debuff state are checked at generation time, so sale, removal, duplicate copies, and save/load require no stored activation counters or restoration of rates.
+- Forced tags execute normally and retain their existing consumption flow. Their prohibited cards are replaced rather than removing a shop slot.
+- If all eligible type weights are zero, use a Joker. If a direct-offer replacement pool contains no eligible center, use the basic Joker as a final fallback.
+- Mocked Lua behavior checks are in `tests/curated_shop.lua` and pass. They cover inactive/debuffed states, prohibited types and forced keys, Spectral eligibility, unchanged rates, booster isolation, direct-offer reference preservation, duplicate copies, sale, existing stock, and restoration of playing-card front overrides after errors.
+- The mod has not been compiled or tested in the running game.
 
-## Questions to Resolve
+## Remaining Validation
 
-- Which pack should contain this Joker?
+- Playtest the shop, vouchers, tags, save/load, and booster behavior in Balatro.
+- Verify interactions with any other installed mods that replace shop generation.
 
 ## Manual Playtest Plan
 
@@ -101,6 +102,6 @@ The description applies to newly generated individual shop offers. Existing card
 - **Confirmed initial balance:** Uncommon rarity and a $6 purchase price, to be assessed during playtesting.
 - **Confirmed temporary name:** Curated Shop, with the final name left open for later.
 - **Confirmed sale behavior:** Selling the Joker does not change displayed cards; the next reroll uses normal shop generation unless another active copy maintains the restriction.
-- **Proposed:** The replacement selection method and behavior for removal other than sale.
-- **Status:** Design in progress; no playtesting performed.
-- **Next step:** Choose the pack, then resolve remaining implementation details before coding is requested. The temporary name is approved; final naming can be revisited later.
+- **Implementation choices:** Relative-weight replacement selection and generation-time checks for all forms of removal.
+- **Status:** Implemented; mocked behavior checks pass, in-game playtesting pending.
+- **Next step:** Enable Pack 3 if an older saved configuration disabled it, restart Balatro, and perform the manual playtest plan. Final naming can be revisited later.

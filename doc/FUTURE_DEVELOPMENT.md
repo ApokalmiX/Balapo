@@ -8,6 +8,7 @@ This document is a starting point for discussing the future of Balapo. Ideas lis
 
 - Balapo adds custom Jokers, with an emphasis on Endless Mode runs.
 - Two Joker packs can currently be enabled independently in the mod configuration.
+- A third, optional development pack is enabled by default and reserved for experimental Jokers. See [Development Joker Pack](DEVELOPMENT_PACK.md).
 - The mod uses Lua, Love2D, and Steamodded.
 
 ## Questions to Guide Development

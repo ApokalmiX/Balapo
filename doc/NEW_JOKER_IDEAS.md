@@ -14,7 +14,7 @@ Keep one Markdown file per Joker in the joker_ideas/ directory. Use this documen
 
 | Working name | Core effect | Intended strategy | Open questions | Status |
 | --- | --- | --- | --- | --- |
-| [Curated Shop (approved temporary name)](joker_ideas/curated_shop.md) | Exclude newly generated individual Tarot, Planet, and playing-card offers; replace prohibited forced offers with eligible offers and consume triggering tags normally. Preserve existing stock, boosters, and eligible Spectral offers. Active while at least one non-debuffed copy is owned; copies do not stack. Incompatible with Blueprint and Brainstorm. Initial balance: Uncommon, $6. | Find Jokers more consistently at the expense of other shop options. | Pack; final name can be revisited later. | Design in progress |
+| [Curated Shop (approved temporary name)](joker_ideas/curated_shop.md) | Exclude newly generated individual Tarot, Planet, and playing-card offers; replace prohibited forced offers with eligible offers and consume triggering tags normally. Preserve existing stock, boosters, and eligible Spectral offers. Active while at least one non-debuffed copy is owned; copies do not stack. Incompatible with Blueprint and Brainstorm. Initial balance: Uncommon, $6. | Find Jokers more consistently at the expense of other shop options. | Pack 3 implementation complete; in-game validation and final naming remain. | Implemented |
 
 Suggested statuses: To discuss, Design in progress, Ready to implement, Implemented, Playtesting, Deferred, Rejected.
 

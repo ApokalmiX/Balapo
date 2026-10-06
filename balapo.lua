@@ -18,6 +18,11 @@ SMODS.current_mod.config_tab = function()
               label = "Jokers pack 2 (restart required)",
               ref_table = config,
               ref_value = "joker_pack_2",
+          }),
+          create_toggle({
+              label = "Jokers pack 3 - Development (restart required)",
+              ref_table = config,
+              ref_value = "joker_pack_3",
           })
         },
       }
@@ -31,6 +36,10 @@ end
 
 if config.joker_pack_2 then
     SMODS.load_file("src/jokers/pack_2.lua")()
+end
+
+if config.joker_pack_3 then
+    SMODS.load_file("src/jokers/pack_3.lua")()
 end
 
 SMODS.load_file("src/vouchers.lua")()
