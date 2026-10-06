@@ -18,6 +18,13 @@ Keep one Markdown file per Joker in the joker_ideas/ directory. Use this documen
 
 Suggested statuses: To discuss, Design in progress, Ready to implement, Implemented, Playtesting, Deferred, Rejected.
 
+### Additional Ideas
+
+| Idea | Core effect | Open questions | Status |
+| --- | --- | --- | --- |
+| [Polychrome Ability Copying](joker_ideas/polychrome_legendary.md) | A Legendary Joker copies the abilities of all other owned Blueprint-compatible Polychrome Jokers from left to right; stop copy chains before revisiting an active target. | Inactive targets, editions, multiple copies, and naming. | Design in progress |
+| [Loose Ends (approved temporary name)](joker_ideas/non_scoring_destruction.md) | Each played playing card that does not score receives an independent base 1 in 2 destruction roll, affected by probability modifiers, during the native Glass Card destruction phase. Each active copy or valid Blueprint/Brainstorm activation adds a roll until destruction is determined. Initial balance: Uncommon, $6. | Technical implementation and in-game validation; default artwork. | Design specified |
+
 ## Joker Specification Template
 
 ### [Working name]
